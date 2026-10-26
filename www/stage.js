@@ -8,7 +8,7 @@ function Scene(opts) {
   var doneBtn = el.querySelector('.stage-done'), skipBtn = el.querySelector('.stage-skip');
   var items = [], idx = 0, phase = 'idle', timers = [], card = null;
 
-  var ARRIVE_MS = 1300, SUSPENSE_MS = 1000, FLIP_MS = 600, STORE_MS = 450;
+  var ARRIVE_MS = 1300, SUSPENSE_MS = 2000, FLIP_MS = 600, STORE_MS = 450;
 
   function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
@@ -68,13 +68,13 @@ function Scene(opts) {
     }, ARRIVE_MS);
   }
 
-  /* Suspense : musique et vibrations pendant 1 s, puis la carte se retourne. */
+  /* Suspense : musique et vibrations pendant 2 s, puis la carte se retourne. */
   function reveal() {
     phase = 'revealing'; setHint('');
     var s = opts.settings();
     if (s.sound) opts.sound.suspense(SUSPENSE_MS / 1000);
     card.classList.add('shake');
-    for (var t = 0; t < SUSPENSE_MS; t += 70) (function (tt) { later(function () { opts.haptic(tt < 500 ? 1 : 2); }, tt); })(t);
+    for (var t = 0; t < SUSPENSE_MS; t += 70) (function (tt) { later(function () { opts.haptic(tt < SUSPENSE_MS / 2 ? 1 : 2); }, tt); })(t);
     later(function () {
       card.classList.remove('shake');
       if (s.sound) opts.sound.reveal();

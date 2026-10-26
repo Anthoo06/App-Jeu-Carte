@@ -1,5 +1,5 @@
 /* Sons du tirage, fabriqués à la volée avec Web Audio (aucun fichier).
-   suspense : roulement de caisse claire qui accélère et monte, environ 1 s.
+   suspense : roulement de caisse claire qui accélère et monte, environ 2 s.
    reveal   : impact grave + carillon lumineux quand la carte se retourne. */
 var Son = (function () {
   'use strict';
@@ -92,8 +92,8 @@ var Son = (function () {
     reveal: function () { try { var c = live(); if (c) revealAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
     /* Pour écouter hors de l'appli : rend suspense + révélation dans un contexte hors-ligne. */
     renderDemo: function (OfflineCtx) {
-      var c = new OfflineCtx(2, 44100 * 3, 44100), buf = noiseBuffer(c), out = bus(c);
-      suspenseAt(c, out, buf, 0.2, 1.0); revealAt(c, out, buf, 1.25);
+      var c = new OfflineCtx(2, 44100 * 4, 44100), buf = noiseBuffer(c), out = bus(c);
+      suspenseAt(c, out, buf, 0.2, 2.0); revealAt(c, out, buf, 2.25);
       return c.startRendering();
     }
   };
