@@ -18,7 +18,7 @@ var Store = (function (L) {
   }
   function firstRun() {
     var d = defaults();
-    ['Alice', 'Bastien', 'Camille', 'David', 'Emma', 'Farid', 'Gaëlle'].forEach(function (n) { d.players.push({ name: n, present: true }); });
+    ['Kathia', 'Marie-T', 'Lucie', 'Céline', 'Antho', 'Fabienne', 'JD'].forEach(function (n) { d.players.push({ name: n, present: true }); });
     d.meta.example = true;
     return d;
   }
