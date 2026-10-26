@@ -201,8 +201,12 @@ select { appearance: none; padding-right: 36px;
 .fold .rows { margin-top: 8px; }
 
 /* Fenêtres */
-.sheet { position: fixed; inset: 0; z-index: 40; background: rgba(10, 12, 16, .55); display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
-.sheetbox { background: var(--bg); border-radius: 18px; padding: 18px; width: min(100%, 520px); max-height: 80vh; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
+/* Fenêtre centrée sur un fond très assombri et flouté : on voit tout de suite ce qui est au premier plan. */
+.sheet { position: fixed; inset: 0; z-index: 40; background: rgba(8, 10, 14, .78); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 16px; }
+.sheetbox { background: var(--surface); border: 1.5px solid var(--line); border-radius: 22px; padding: 20px; width: min(100%, 480px); max-height: 85vh; overflow: auto;
+  display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .45); }
+.sheetbox input[type="text"], .sheetbox textarea, .sheetbox .row { background: var(--bg); }
 .sheetbox h2 { color: var(--ink); font-size: 17px; }
 .toast { position: fixed; left: 50%; top: max(14px, env(safe-area-inset-top, 0px)); transform: translate(-50%, -12px); max-width: calc(100% - 32px); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; text-align: center; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
