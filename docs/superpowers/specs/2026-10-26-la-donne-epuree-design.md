@@ -16,7 +16,7 @@ Problème signalé : les couleurs se ressemblent toutes, on distingue mal qui es
 
 Un seul écran principal, sans barre d'onglets. En haut à droite :
 - **⚙** ouvre les Paramètres en plein écran (flèche ← pour revenir) ;
-- **🕘** ouvre l'Historique en plein écran. Ce bouton n'est visible que si « Garder l'historique » est activé.
+- **🕘** ouvre l'Historique en plein écran. Ce bouton n'est visible que si « Afficher l'historique » est activé.
 
 ## Écran principal (de haut en bas)
 
@@ -27,14 +27,14 @@ Un seul écran principal, sans barre d'onglets. En haut à droite :
 3. **💾 Sauvegarder** : une petite fenêtre demande un nom. Si le nom existe déjà (sans tenir compte des majuscules), la liste est mise à jour. Elle enregistre les prénoms et leur présence.
 4. **📂 Charger** : une fenêtre liste les sauvegardes (nom et nombre de joueurs). Un appui charge la liste et remplace les joueurs actuels. La poubelle supprime, avec confirmation. Les contraintes qui citent un joueur disparu sont retirées.
 5. **Taille des groupes**, en boutons segmentés **Duos · Trios · Autre**. « Autre » affiche un champ chiffré « joueurs par groupe » (de 2 à 10, valeur par défaut 4). La valeur choisie est mémorisée.
-6. **Case « Éviter les paires déjà vues »**, juste au-dessus du bouton de tirage. Elle se base sur les tirages enregistrés, et n'apparaît que si l'historique est activé.
+6. **Case « Éviter les paires déjà vues »**, juste au-dessus du bouton de tirage, **toujours visible**. Elle se base sur les tirages enregistrés en arrière-plan.
 7. **Aperçu** : une ligne du type « 7 joueurs → 1 trio + 2 duos », avec « + 1 remplaçant » si besoin. Si des contraintes sont actives, une seconde ligne l'indique (« 2 contraintes actives »).
 8. **TIRER AU SORT** : le seul bouton plein de l'écran, rouge vif. Les erreurs (moins de 2 présents, contraintes impossibles) s'affichent juste en dessous.
 9. **Résultat** :
    - une carte par groupe, avec les prénoms en gros ;
    - chaque groupe a sa couleur franche : bande de couleur et étiquette « Groupe 1 », « Groupe 2 »… ;
    - les remplaçants sont dans une carte à part, en pointillés ;
-   - les boutons sont « Copier » (texte simple) et « ★ Garder » (favori), ce dernier seulement si l'historique est activé ;
+   - les boutons sont « Copier » (texte simple) et « ★ Garder » (favori), ce dernier seulement si l'historique est affiché ;
    - un défilement automatique amène au résultat après le tirage.
 
 ## Couleurs (une couleur par rôle)
@@ -59,8 +59,8 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 - **Mode suspense** : interrupteur. Les cartes arrivent face cachée ; un appui en retourne une, et le bouton « Tout révéler » les retourne toutes.
 
 **Historique**
-- **Garder l'historique** : interrupteur, coupé par défaut. On garde les 50 derniers tirages, plus les favoris.
-- Quand il est coupé, la case « Éviter les paires déjà vues », le bouton 🕘 et « ★ Garder » sont masqués. L'historique déjà enregistré est conservé.
+- Les tirages sont **toujours enregistrés** en arrière-plan (les 50 derniers, plus les favoris), pour que « Éviter les paires déjà vues » fonctionne.
+- **Afficher l'historique** : interrupteur, coupé par défaut. Il ne fait que montrer ou cacher le bouton 🕘 et « ★ Garder ».
 
 **Ambiance**
 - Animation du tirage (oui par défaut).
@@ -95,6 +95,8 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 - Les listes sauvegardées gardent désormais la présence de chaque joueur. Les anciennes listes (prénoms seuls) se chargent avec tout le monde présent.
 - Un import de texte v1 est accepté, avec la même conversion.
 - L'algorithme de tirage (`planSizes`, `drawGroups`…) est conservé tel quel, sans les branches `count` et `balanced` devenues inutiles.
+- Le code est découpé : `www/logic.js` (tirage, pur), `www/store.js` (données, conversion v1, pur), `www/app.js` (écran), `www/style.css`. Les deux fichiers purs sont testés avec `node --test`.
+- Le bouton retour d'Android ferme la fenêtre ou la page ouverte (Paramètres, Historique, Sauvegarder, Charger) au lieu de quitter l'appli : chaque couche ouverte ajoute une entrée d'historique du navigateur (`#reglages`…).
 
 ## Vérification
 

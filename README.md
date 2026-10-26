@@ -20,11 +20,16 @@ puis Partager → « Sur l'écran d'accueil ».
 
 ## Contenu
 
-- `www/index.html` : toute l'appli (interface, algorithme de tirage, sauvegarde locale)
+- `www/index.html`, `www/style.css` : l'écran (un écran principal, Paramètres ⚙, Historique 🕘)
+- `www/logic.js` : algorithme de tirage (tailles, contraintes, anti-répétition)
+- `www/store.js` : données, reprise des anciennes sauvegardes, export / import
+- `www/app.js` : affichage et actions
 - `www/fonts/` : polices embarquées, l'appli marche sans connexion
+- `tests/` : tests de la logique (`npm test`)
 - `assets/` : icône et écran de démarrage
 - `capacitor.config.json` : emballage Android avec Capacitor
 - `android-debug.keystore` : clé de signature fixe (mot de passe `android`), pour que les mises à jour s'installent par-dessus
+- `docs/superpowers/specs/` : le design de la version épurée
 
 ## Fabriquer l'APK sur son ordinateur
 

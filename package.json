@@ -4,10 +4,12 @@
   "private": true,
   "description": "La Donne : tirage au sort de duos, trios, quatuors ou équipes pour les jeux de cartes et de société.",
   "scripts": {
-    "android:prepare": "cap add android && capacitor-assets generate --android && cap sync android"
+    "android:prepare": "cap add android && capacitor-assets generate --android && cap sync android",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3"
   },
   "devDependencies": {

@@ -32,6 +32,9 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
+      - name: Tests
+        run: npm test
+
       - name: Générer le projet Android (icônes, écran de démarrage, page web)
         run: npm run android:prepare
 
