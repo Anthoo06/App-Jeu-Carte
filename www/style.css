@@ -245,15 +245,15 @@ select { appearance: none; padding-right: 36px;
 .tcard .nm { font-size: 13px; line-height: 1.2; }
 .tcard.bench { border-style: dashed; border-top-width: 2px; }
 
-/* Bouquets de fleurs dans les coins (réglage « Fleurs sur les cartes ») : pétales de la couleur du groupe. */
-:root { --leaf: #3E9B4F; --heart: #F6C744; }
-:root[data-theme="dark"] { --leaf: #5BC271; --heart: #FFD45C; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --leaf: #5BC271; --heart: #FFD45C; } }
-.corner { display: none; position: absolute; width: 36%; max-width: 104px; aspect-ratio: 1; pointer-events: none; color: var(--c); z-index: 0; }
+/* Fleurs dans les coins (réglage « Fleurs sur les cartes ») : une fleur par couleur de groupe. */
+.corner { display: none; position: absolute; width: 49.3%; height: auto; pointer-events: none; z-index: 0; }
 .decor .corner { display: block; }
 /* Les deux bouquets en bas, pour laisser « Groupe X » dégagé en haut. */
-.corner.tl { bottom: 0; left: 0; transform: rotate(-90deg); }
-.corner.br { bottom: 0; right: 0; transform: rotate(180deg); }
+.corner.bl { bottom: 0; left: 0; }
+.corner.tr { top: 0; right: 0; }
+/* Texte lisible par-dessus les fleurs. */
+.decor .deco .glabel { background: var(--surface); padding: 2px 6px; border-radius: 6px; }
+.decor .deco .nm { background: color-mix(in srgb, var(--surface) 70%, transparent); padding: 0 6px; border-radius: 6px; }
 .deco { overflow: hidden; }
 .deco .glabel, .deco .nms { position: relative; z-index: 1; }
 .final .tcard .nms, .tray .tcard .nms { justify-content: center; }

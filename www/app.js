@@ -63,7 +63,7 @@
     return t;
   }
   function gColor(i) { return 'var(--g' + (i % NB_COLORS) + ')'; }
-  function gFlowers(i) { return i % 3; }
+  function gFlowers(i) { return i % 8; }
   function presentNames() { return state.players.filter(function (p) { return p.present; }).map(function (p) { return p.name; }); }
   function copyText(text, okMsg) {
     function fallback() { var t = $('#copyText'); t.value = text; $('#copySheet').hidden = false; t.focus(); t.select(); }

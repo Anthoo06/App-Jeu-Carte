@@ -1,11 +1,13 @@
 /* Scène de tirage : chaque groupe arrive au centre en tournant, se révèle, puis glisse dans la rangée du bas.
    À la fin, toutes les cartes se réunissent au centre, avec « Terminé » juste en dessous.
    opts : el (conteneur), color(i), esc(s), haptic(niveau 1..3), settings() → réglages, sound (Son), onDone(). */
-/* Bouquets de fleurs dans deux coins opposés d'une carte (motif 0, 1 ou 2 ; -1 = aucun). */
+/* Fleurs dans deux coins opposés d'une carte : une fleur par couleur de groupe (0 à 7 ; -1 = aucune).
+   Dessins dans www/flowers, générés par tools/dessine-fleurs.py. */
 function flowerCorners(v) {
   if (v < 0) return '';
-  var u = '<use href="#fl' + v + '" width="100%" height="100%"/>';
-  return '<svg class="corner tl" aria-hidden="true">' + u + '</svg><svg class="corner br" aria-hidden="true">' + u + '</svg>';
+  return ['bl', 'tr'].map(function (k) {
+    return '<img class="corner ' + k + '" src="flowers/f' + v + '-' + k + '.svg" alt="" aria-hidden="true">';
+  }).join('');
 }
 
 function Scene(opts) {
