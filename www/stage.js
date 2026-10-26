@@ -117,7 +117,28 @@ function Scene(opts) {
     setHint('');
     skipBtn.hidden = true;
     doneBtn.hidden = false;
+    gather();
+  }
+  /* Fin : toutes les cartes de la rangée remontent au centre, au-dessus de « Terminé ». */
+  function gather() {
+    var cards = Array.prototype.slice.call(tray.children);
+    var before = cards.map(function (c) { return c.getBoundingClientRect(); });
+    var wrap = document.createElement('div'), box = document.createElement('div');
+    wrap.className = 'final';
+    box.className = 'finalgrid' + (cards.length > 4 ? ' many' : '');
+    wrap.appendChild(box);
     center.innerHTML = '';
+    center.appendChild(wrap);
+    cards.forEach(function (c) { box.appendChild(c); });
+    tray.hidden = true;
+    cards.forEach(function (c, i) {
+      var a = before[i], b = c.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      c.animate([
+        { transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')', transformOrigin: '0 0' },
+        { transform: 'none', transformOrigin: '0 0' }
+      ], { duration: 550, delay: i * 40, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'backwards' });
+    });
   }
   /* « Tout révéler » : range directement tout ce qui reste. */
   function skip() {
@@ -160,7 +181,7 @@ function Scene(opts) {
       items = draw.groups.map(function (g, i) { return { names: g, label: 'Groupe ' + (i + 1), color: opts.color(i) }; });
       if (draw.bench.length) items.push({ names: draw.bench, label: 'Sur le banc', color: 'var(--muted)', bench: true });
       idx = 0;
-      tray.innerHTML = ''; tray.scrollLeft = 0;
+      tray.innerHTML = ''; tray.scrollLeft = 0; tray.hidden = false;
       doneBtn.hidden = true; skipBtn.hidden = false;
       arrive();
     },
