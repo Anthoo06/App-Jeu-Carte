@@ -94,7 +94,6 @@
     var n = presentNames().length, m = state.players.length;
     $('#pcount').textContent = m ? n + ' / ' + m + ' présent' + (n > 1 ? 's' : '') : '';
     $('.pfoot .link').hidden = !m;
-    $('#exampleNote').hidden = !state.meta.example;
     renderDrawPanel();
   }
   function renderDrawPanel() {
