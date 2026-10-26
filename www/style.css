@@ -17,9 +17,6 @@
   --warn-bg: #FCEBD0;
   --g0: #D7263D; --g1: #1F5FBF; --g2: #1E8E3E; --g3: #E07A00;
   --g4: #7B3FB8; --g5: #00838F; --g6: #C2185B; --g7: #795548;
-  --fl0: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='black'%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%280%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%2845%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%2890%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%28135%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%28180%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%28225%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%28270%29'/%3E%3Cellipse cx='0' cy='-6.0' rx='2.2' ry='6.0' transform='translate%2820 20%29 rotate%28315%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%2820%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%2865%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%28110%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%28155%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%28200%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%28245%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%28290%29'/%3E%3Cellipse cx='0' cy='-4.5' rx='1.6' ry='4.5' transform='translate%2860 58%29 rotate%28335%29'/%3E%3Ccircle cx='58' cy='16' r='2'/%3E%3Ccircle cx='14' cy='64' r='1.6'/%3E%3Ccircle cx='40' cy='40' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
-  --fl1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='black'%3E%3Ccircle cx='22.0' cy='19.0' r='4'/%3E%3Ccircle cx='26.755282581475768' cy='22.454915028125264' r='4'/%3E%3Ccircle cx='24.938926261462367' cy='28.045084971874736' r='4'/%3E%3Ccircle cx='19.061073738537637' cy='28.045084971874736' r='4'/%3E%3Ccircle cx='17.244717418524232' cy='22.454915028125264' r='4'/%3E%3Ccircle cx='62.116026908252906' cy='55.08753882025019' r='2.9'/%3E%3Ccircle cx='63.423803458662555' cy='59.11246117974981' r='2.9'/%3E%3Ccircle cx='60.0' cy='61.6' r='2.9'/%3E%3Ccircle cx='56.576196541337445' cy='59.112461179749815' r='2.9'/%3E%3Ccircle cx='57.883973091747094' cy='55.08753882025019' r='2.9'/%3E%3Ccircle cx='62' cy='18' r='1.8'/%3E%3Ccircle cx='16' cy='62' r='1.5'/%3E%3C/g%3E%3C/svg%3E");
-  --fl2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='black'%3E%3Cpath d='M14 30 q0 -12 6 -14 q6 2 6 14 q-6 4 -12 0z'/%3E%3Cpath d='M19.4 30 h1.2 v12 h-1.2z'/%3E%3Cpath d='M0 0 Q4 -6 0 -12 Q-4 -6 0 0Z' transform='translate%2820 42%29 rotate%28-40%29'/%3E%3Cpath d='M54 66 q0 -10 5 -12 q5 2 5 12 q-5 3 -10 0z'/%3E%3Cpath d='M58.5 66 h1 v8 h-1z'/%3E%3Cpath d='M0 0 Q3.2 -4.800000000000001 0 -9.600000000000001 Q-3.2 -4.800000000000001 0 0Z' transform='translate%2866 26%29 rotate%2830%29'/%3E%3Ccircle cx='44' cy='12' r='1.6'/%3E%3Ccircle cx='34' cy='62' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
   --f-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --f-mono: 'DM Mono', ui-monospace, Menlo, monospace;
   color-scheme: light;
@@ -248,12 +245,17 @@ select { appearance: none; padding-right: 36px;
 .tcard .nm { font-size: 13px; line-height: 1.2; }
 .tcard.bench { border-style: dashed; border-top-width: 2px; }
 
-/* Fleurs de la couleur du groupe en fond de carte, sous le texte. */
-.decor .deco::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
-  background: var(--c); opacity: .16; -webkit-mask: var(--fl) 0 0 / 72px 72px repeat; mask: var(--fl) 0 0 / 72px 72px repeat; }
-.decor .bench .deco::before, .decor .deco.bench::before { display: none; }
-:root[data-theme="dark"].decor .deco::before { opacity: .22; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]).decor .deco::before { opacity: .22; } }
+/* Bouquets de fleurs dans les coins (réglage « Fleurs sur les cartes ») : pétales de la couleur du groupe. */
+:root { --leaf: #3E9B4F; --heart: #F6C744; }
+:root[data-theme="dark"] { --leaf: #5BC271; --heart: #FFD45C; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --leaf: #5BC271; --heart: #FFD45C; } }
+.corner { display: none; position: absolute; width: 36%; max-width: 104px; aspect-ratio: 1; pointer-events: none; color: var(--c); z-index: 0; }
+.decor .corner { display: block; }
+/* Les deux bouquets en bas, pour laisser « Groupe X » dégagé en haut. */
+.corner.tl { bottom: 0; left: 0; transform: rotate(-90deg); }
+.corner.br { bottom: 0; right: 0; transform: rotate(180deg); }
+.deco { overflow: hidden; }
+.deco .glabel, .deco .nms { position: relative; z-index: 1; }
 .final .tcard .nms, .tray .tcard .nms { justify-content: center; }
 
 @media (prefers-reduced-motion: reduce) {

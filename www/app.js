@@ -63,7 +63,7 @@
     return t;
   }
   function gColor(i) { return 'var(--g' + (i % NB_COLORS) + ')'; }
-  function gFlowers(i) { return 'var(--fl' + (i % 3) + ')'; }
+  function gFlowers(i) { return i % 3; }
   function presentNames() { return state.players.filter(function (p) { return p.present; }).map(function (p) { return p.name; }); }
   function copyText(text, okMsg) {
     function fallback() { var t = $('#copyText'); t.value = text; $('#copySheet').hidden = false; t.focus(); t.select(); }
@@ -125,12 +125,12 @@
 
   function cardHTML(names, i, down, interactive) {
     var label = 'Groupe ' + (i + 1);
-    var front = '<div class="face front deco"><span class="glabel">' + label + '</span><span class="nms">' + names.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</span></div>';
+    var front = '<div class="face front deco">' + flowerCorners(gFlowers(i)) + '<span class="glabel">' + label + '</span><span class="nms">' + names.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</span></div>';
     var back = interactive ? '<div class="face back" aria-hidden="true">?</div>' : '';
     var attrs = interactive
       ? ' role="button" tabindex="0" data-act="flip" data-gi="' + i + '" aria-label="Retourner la carte du ' + label + '"'
       : ' role="group" aria-label="' + label + ' : ' + esc(names.join(', ')) + '"';
-    return '<div class="flip' + (down ? ' down' : '') + '" style="--c:' + gColor(i) + ';--fl:' + gFlowers(i) + ';--i:' + i + '"' + attrs + '>' + front + back + '</div>';
+    return '<div class="flip' + (down ? ' down' : '') + '" style="--c:' + gColor(i) + ';--i:' + i + '"' + attrs + '>' + front + back + '</div>';
   }
   function renderResult(animate) {
     var box = $('#result'), L = state.last;

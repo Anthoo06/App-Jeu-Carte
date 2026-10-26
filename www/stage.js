@@ -1,6 +1,13 @@
 /* Scène de tirage : chaque groupe arrive au centre en tournant, se révèle, puis glisse dans la rangée du bas.
    À la fin, toutes les cartes se réunissent au centre, avec « Terminé » juste en dessous.
    opts : el (conteneur), color(i), esc(s), haptic(niveau 1..3), settings() → réglages, sound (Son), onDone(). */
+/* Bouquets de fleurs dans deux coins opposés d'une carte (motif 0, 1 ou 2 ; -1 = aucun). */
+function flowerCorners(v) {
+  if (v < 0) return '';
+  var u = '<use href="#fl' + v + '" width="100%" height="100%"/>';
+  return '<svg class="corner tl" aria-hidden="true">' + u + '</svg><svg class="corner br" aria-hidden="true">' + u + '</svg>';
+}
+
 function Scene(opts) {
   'use strict';
   var el = opts.el;
@@ -16,14 +23,13 @@ function Scene(opts) {
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
   function faceHTML(it) {
-    return '<span class="glabel">' + it.label + '</span><span class="nms">' +
+    return flowerCorners(it.flowers) + '<span class="glabel">' + it.label + '</span><span class="nms">' +
       it.names.map(function (n) { return '<span class="nm">' + opts.esc(n) + '</span>'; }).join('') + '</span>';
   }
   function bigCard(it, down) {
     var w = document.createElement('div');
     w.className = 'scard' + (it.bench ? ' bench' : '');
     w.style.setProperty('--c', it.color);
-    w.style.setProperty('--fl', it.flowers);
     w.innerHTML = '<div class="sflip' + (down ? ' down' : '') + '"><div class="sface sfront deco">' + faceHTML(it) + '</div>' +
       '<div class="sface sback" aria-hidden="true">?</div></div>';
     return w;
@@ -32,7 +38,6 @@ function Scene(opts) {
     var t = document.createElement('div');
     t.className = 'tcard deco' + (it.bench ? ' bench' : '');
     t.style.setProperty('--c', it.color);
-    t.style.setProperty('--fl', it.flowers);
     t.setAttribute('role', 'group');
     t.setAttribute('aria-label', it.label + ' : ' + it.names.join(', '));
     t.innerHTML = faceHTML(it);
@@ -207,7 +212,7 @@ function Scene(opts) {
       clearTimers();
       nbGroups = draw.groups.length;
       items = draw.groups.map(function (g, i) { return { names: g, label: 'Groupe ' + (i + 1), color: opts.color(i), flowers: opts.flowers(i) }; });
-      if (draw.bench.length) items.push({ names: draw.bench, label: 'Sur le banc', color: 'var(--muted)', flowers: 'none', bench: true });
+      if (draw.bench.length) items.push({ names: draw.bench, label: 'Sur le banc', color: 'var(--muted)', flowers: -1, bench: true });
       idx = 0;
       clearCenter();
       tray.innerHTML = ''; tray.scrollLeft = 0; tray.hidden = false;
