@@ -220,7 +220,7 @@ html.locked, html.locked body { overflow: hidden; }
 .stage-count { font-size: 15px; color: var(--ink); }
 .stage-center { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1200px; min-height: 0; cursor: pointer; }
 .stage-hint { min-height: 24px; color: var(--muted); font-size: 15px; text-align: center; padding: 0 16px; }
-.scard { width: min(68vw, 290px, calc((100vh - 330px) / 1.4)); aspect-ratio: 5 / 7; will-change: transform; }
+.scard { width: clamp(150px, min(68vw, 290px, calc((100vh - 330px) / 1.4)), 290px); aspect-ratio: 5 / 7; will-change: transform; }
 .sflip { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.22, .8, .24, 1); will-change: transform; }
 .sflip.down { transform: rotateY(180deg); }
 .sface { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; }

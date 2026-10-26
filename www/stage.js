@@ -16,7 +16,8 @@ function Scene(opts) {
   var center = el.querySelector('.stage-center'), hint = el.querySelector('.stage-hint');
   var tray = el.querySelector('.tray'), count = el.querySelector('.stage-count');
   var endBox = el.querySelector('.stage-end'), doneBtn = el.querySelector('.stage-done'), skipBtn = el.querySelector('.stage-skip');
-  var items = [], idx = 0, phase = 'idle', timers = [], card = null, nbGroups = 0;
+  // gen change à chaque démarrage, arrêt ou saut : une animation lancée avant ne doit plus rien déclencher après.
+  var items = [], idx = 0, phase = 'idle', timers = [], card = null, nbGroups = 0, gen = 0;
 
   var LAND_MS = 950, ARRIVE_MS = 1300, SUSPENSE_MS = 2000, FLIP_MS = 700, STORE_MS = 650, GATHER_MS = 750;
   var SMOOTH = 'cubic-bezier(.22,.8,.24,1)';
@@ -59,6 +60,7 @@ function Scene(opts) {
 
   /* Arrivée : minuscule au centre, la carte grandit en tournant de moins en moins vite, avec souffle et vibrations croissantes. */
   function arrive() {
+    clearTimers();
     var it = items[idx], s = opts.settings();
     var down = s.suspense && !it.bench;
     card = bigCard(it, down);
@@ -97,7 +99,8 @@ function Scene(opts) {
     return frames;
   }
 
-  /* Suspense : musique, tremblement et vibrations pendant 2 s, puis la carte se retourne. */
+  /* Suspense : musique, tremblement et vibrations pendant 2 s, puis la carte se retourne (le carillon est
+     programmé avec le roulement, pour tomber pile au retournement). */
   function reveal() {
     phase = 'revealing'; setHint('');
     var s = opts.settings();
@@ -105,7 +108,6 @@ function Scene(opts) {
     card.animate(shakeFrames(SUSPENSE_MS), { duration: SUSPENSE_MS, easing: 'linear' });
     for (var t = 0; t < SUSPENSE_MS; t += 70) (function (tt) { later(function () { opts.haptic(tt < SUSPENSE_MS / 2 ? 1 : 2); }, tt); })(t);
     later(function () {
-      if (s.sound) opts.sound.reveal();
       opts.haptic(3);
       card.querySelector('.sflip').classList.remove('down');
       card.animate([{ transform: 'scale(1.05)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: FLIP_MS, easing: SMOOTH });
@@ -129,7 +131,9 @@ function Scene(opts) {
     ], { duration: STORE_MS, easing: 'cubic-bezier(.45,.05,.25,1)', fill: 'forwards' });
     if (opts.settings().sound) opts.sound.slide();
     opts.haptic(1);
+    var my = gen;
     anim.onfinish = function () {
+      if (my !== gen) return;   // scène fermée ou sautée pendant le glissement
       t.style.visibility = '';
       t.animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' });
       center.innerHTML = ''; card = null;
@@ -168,9 +172,11 @@ function Scene(opts) {
     cards.forEach(function (c, i) {
       var a = before[i], b = c.getBoundingClientRect();
       if (!a.width || !b.width) return;
+      // Seule la transformation est animée (pas l'origine) : l'animation reste entièrement sur le processeur graphique.
+      c.style.transformOrigin = '0 0';
       c.animate([
-        { transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')', transformOrigin: '0 0' },
-        { transform: 'none', transformOrigin: '0 0' }
+        { transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')' },
+        { transform: 'none' }
       ], { duration: GATHER_MS, delay: i * 55, easing: SMOOTH, fill: 'backwards' });
     });
     endBox.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
@@ -179,8 +185,12 @@ function Scene(opts) {
   /* « Tout révéler » : range directement tout ce qui reste. */
   function skip() {
     clearTimers();
+    gen++;
+    if (opts.settings().sound) opts.sound.cut();
     if (card) card.getAnimations().forEach(function (a) { a.cancel(); });
     card = null;
+    // Pendant un rangement, la carte du groupe en cours est déjà dans la rangée (encore invisible).
+    if (phase === 'storing') { tray.lastChild.style.visibility = ''; idx++; }
     for (var i = idx; i < items.length; i++) tray.appendChild(trayCard(items[i]));
     finish();
   }
@@ -211,10 +221,26 @@ function Scene(opts) {
     if (!raf) raf = requestAnimationFrame(loop);
   }, { passive: true });
 
+  /* Préchauffage : une grande carte dessinée une fois hors écran, pour que la première vraie carte n'ait pas d'à-coup. */
+  function warmUp() {
+    // Dans l'écran (sinon le navigateur ne dessine rien) mais quasi invisible, derrière tout, le temps de deux images.
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;opacity:.01;z-index:-1;pointer-events:none';
+    for (var f = 0; f < 8; f++) {
+      var w = bigCard({ names: ['A'], label: '', color: opts.color(f), flowers: f }, false);
+      w.style.position = 'absolute';
+      box.appendChild(w);
+    }
+    document.body.appendChild(box);
+    setTimeout(function () { box.remove(); }, 400);
+  }
+  if (window.requestIdleCallback) requestIdleCallback(warmUp, { timeout: 1500 }); else setTimeout(warmUp, 600);
+
   return {
     /* instant : sans animation, toutes les cartes s'affichent directement au centre. */
     start: function (draw, instant) {
       clearTimers();
+      gen++;
       nbGroups = draw.groups.length;
       items = draw.groups.map(function (g, i) { return { names: g, label: 'Groupe ' + (i + 1), color: opts.color(i), flowers: opts.flowers(i) }; });
       if (draw.bench.length) items.push({ names: draw.bench, label: 'Sur le banc', color: 'var(--muted)', flowers: -1, bench: true });
@@ -231,6 +257,9 @@ function Scene(opts) {
     },
     stop: function () {
       clearTimers();
+      gen++;
+      opts.sound.cut();
+      if (card) card.getAnimations().forEach(function (a) { a.cancel(); });
       phase = 'idle';
       clearCenter(); card = null;
     }

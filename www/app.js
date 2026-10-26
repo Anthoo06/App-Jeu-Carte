@@ -123,6 +123,7 @@
   }
 
   function doDraw() {
+    if (ui.layer) return;   // double appui : la scène est déjà ouverte
     var s = state.settings, err = $('#drawErr');
     err.textContent = '';
     var r = drawGroups(presentNames(), {
@@ -423,6 +424,11 @@
   }
 
   /* ----- Démarrage ----- */
+  // Les dessins de fleurs sont chargés et décodés d'avance : la première carte arrive sans à-coup.
+  for (var f = 0; f < 8; f++) ['bl', 'tr'].forEach(function (k) {
+    var im = new Image(); im.src = 'flowers/f' + f + '-' + k + '.svg';
+    if (im.decode) im.decode().catch(function () {});
+  });
   save();
   applyTheme();
   renderMain();

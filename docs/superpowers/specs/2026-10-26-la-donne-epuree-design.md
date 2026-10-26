@@ -142,3 +142,19 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 - Paramètres en trois blocs façon réglages du téléphone : Tirage (reste : Agrandir / Plus petit ; Mode suspense), Affichage et sons (Animation, Son, Vibration, Fleurs, Afficher l'historique, Thème Auto / Clair / Sombre), Plus (Contraintes ›, Sauvegarde ›, chacune sur sa propre page). « Tout réinitialiser » devient un lien discret en bas.
 - La navigation est une pile : Paramètres → Contraintes → retour ramène aux Paramètres.
 - Les messages courts s'affichent en haut de l'écran, pour ne pas masquer le bouton de tirage.
+
+## Audit complet (2026-10-26)
+
+Bugs corrigés (reproduits avant correction) :
+- Double appui sur « Tirer au sort » : deux tirages enregistrés, et « Copier » pouvait copier un autre tirage que celui affiché. Le tirage est ignoré si la scène est déjà ouverte.
+- Scène fermée pendant qu'une carte glisse : la carte suivante repartait en coulisse (sons, vibrations). Chaque démarrage, arrêt ou saut change un compteur, et les fins d'animation d'avant sont ignorées.
+- « Tout révéler » pendant qu'une carte glisse : carte en double, dont une invisible.
+- Sons encore programmés après fermeture ou « Tout révéler » : coupés net (Son.cut).
+
+Fluidité :
+- Toutes les animations ne touchent que transform/opacity (calculées par le processeur graphique). L'animation de l'origine de transformation au regroupement final a été retirée.
+- Carillon du suspense programmé avec le roulement (retard du haut-parleur compensé) au lieu d'un minuteur.
+- Dessins de fleurs décodés au démarrage, et grandes cartes dessinées une fois en coulisse : plus d'à-coup à la première carte.
+- Mesure à 60 images/s sur toute une séquence (9 joueurs, suspense) : aucune tâche longue sur le fil principal.
+
+Divers : APK verrouillé en portrait (tools/android-portrait.js), taille minimale de la grande carte sur écran court. Test de 1 200 appuis au hasard : aucune erreur.

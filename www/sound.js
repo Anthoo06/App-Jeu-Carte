@@ -1,6 +1,6 @@
 /* Sons du tirage, fabriqués à la volée avec Web Audio (aucun fichier).
    suspense : roulement de caisse claire qui accélère et monte, environ 2 s.
-   reveal   : impact grave + carillon lumineux quand la carte se retourne. */
+   reveal   : impact grave + carillon lumineux quand la carte se retourne (programmé avec le roulement). */
 var Son = (function () {
   'use strict';
   var ctx = null, noise = null;
@@ -15,6 +15,7 @@ var Son = (function () {
     comp.threshold.value = -14; comp.ratio.value = 4;
     var g = c.createGain(); g.gain.value = 0.9;
     comp.connect(g); g.connect(c.destination);
+    comp._g = g;
     return comp;
   }
 
@@ -118,11 +119,28 @@ var Son = (function () {
   return {
     /* À appeler pendant un appui de l'utilisateur, pour que le navigateur autorise le son. */
     unlock: function () { try { live(); } catch (e) { /* pas de son */ } },
-    suspense: function (dur) { try { var c = live(); if (c) suspenseAt(c, c._out, noise, c.currentTime + 0.02, dur); } catch (e) { /* pas de son */ } },
+    // Roulement puis carillon pile au retournement de la carte (dur secondes plus tard), retard du haut-parleur compensé.
+    suspense: function (dur) {
+      try {
+        var c = live(); if (!c) return;
+        var t0 = c.currentTime + 0.02;
+        suspenseAt(c, c._out, noise, t0, dur);
+        revealAt(c, c._out, noise, Math.max(t0, t0 + dur - latency(c)));
+      } catch (e) { /* pas de son */ }
+    },
     // Le haut-parleur a un léger retard (surtout sur Android) : on avance le son d'autant pour qu'il tombe avec l'image.
     arrive: function (land) { try { var c = live(); if (c) arriveAt(c, c._out, noise, c.currentTime, Math.max(0.05, land - latency(c))); } catch (e) { /* pas de son */ } },
     slide: function () { try { var c = live(); if (c) slideAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
-    reveal: function () { try { var c = live(); if (c) revealAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
+    /* Coupe net tout ce qui est programmé (scène fermée ou « Tout révéler ») : les sons suivants partent sur une sortie neuve. */
+    cut: function () {
+      if (!ctx) return;
+      try {
+        var old = ctx._out;
+        old._g.gain.setTargetAtTime(0, ctx.currentTime, 0.015);
+        setTimeout(function () { old._g.disconnect(); }, 200);
+        ctx._out = bus(ctx);
+      } catch (e) { /* pas de son */ }
+    },
     /* Pour écouter hors de l'appli : rend suspense + révélation dans un contexte hors-ligne. */
     renderDemo: function (OfflineCtx) {
       var c = new OfflineCtx(2, 44100 * 6, 44100), buf = noiseBuffer(c), out = bus(c);
