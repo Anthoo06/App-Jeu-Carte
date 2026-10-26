@@ -25,11 +25,11 @@
   </header>
 
   <section class="block" aria-label="Joueurs">
-    <form id="addForm" class="addrow" autocomplete="off">
+    <div class="addrow">
       <label class="sr" for="nameInput">Prénoms à ajouter</label>
       <input id="nameInput" type="text" enterkeyhint="done" placeholder="Prénom, Prénom…" maxlength="600" autocapitalize="words" autocomplete="off" spellcheck="false">
-      <button class="btn add" type="submit" aria-label="Ajouter">+</button>
-    </form>
+      <button class="btn add" type="button" data-act="add" aria-label="Ajouter">+</button>
+    </div>
     <p id="addMsg" class="hint" aria-live="polite"></p>
     <p id="exampleNote" class="hint" hidden>Ces prénoms sont des exemples : touche « Tout effacer » pour repartir de zéro.</p>
     <ul id="pills" class="pills"></ul>
@@ -166,16 +166,16 @@
 
 <!-- FENÊTRE SAUVEGARDER -->
 <div id="dlg-sauver" class="sheet" hidden>
-  <form id="saveForm" class="sheetbox" role="dialog" aria-labelledby="saveTitle" autocomplete="off">
+  <div class="sheetbox" role="dialog" aria-labelledby="saveTitle">
     <h2 id="saveTitle">Sauvegarder la liste</h2>
     <label class="sr" for="saveName">Nom de la liste</label>
     <input id="saveName" type="text" maxlength="40" placeholder="Nom (ex. Soirée tarot)" enterkeyhint="done">
     <p id="saveMsg" class="hint"></p>
     <div class="row2">
       <button type="button" class="btn" data-act="back">Annuler</button>
-      <button type="submit" class="btn primary">Enregistrer</button>
+      <button type="button" class="btn primary" data-act="save-list">Enregistrer</button>
     </div>
-  </form>
+  </div>
 </div>
 
 <!-- FENÊTRE CHARGER -->

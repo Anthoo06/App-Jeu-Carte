@@ -96,7 +96,7 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 - Un import de texte v1 est accepté, avec la même conversion.
 - L'algorithme de tirage (`planSizes`, `drawGroups`…) est conservé tel quel, sans les branches `count` et `balanced` devenues inutiles.
 - Le code est découpé : `www/logic.js` (tirage, pur), `www/store.js` (données, conversion v1, pur), `www/app.js` (écran), `www/style.css`. Les deux fichiers purs sont testés avec `node --test`.
-- Le bouton retour d'Android ferme la fenêtre ou la page ouverte (Paramètres, Historique, Sauvegarder, Charger) au lieu de quitter l'appli : chaque couche ouverte ajoute une entrée d'historique du navigateur (`#reglages`…).
+- Le bouton retour d'Android ferme la fenêtre ou la page ouverte (Paramètres, Historique, Sauvegarder, Charger) au lieu de quitter l'appli : chaque couche ouverte est un état interne (sans toucher à l'adresse de la page), et le module App de Capacitor ferme la couche ouverte au bouton retour.
 
 ## Vérification
 

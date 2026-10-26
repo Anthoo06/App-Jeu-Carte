@@ -3,7 +3,7 @@
   'use strict';
   var KEY = 'la-donne:v2', OLD_KEY = 'la-donne:v1';
   var NB_COLORS = 8;
-  /* Couches ouvertes par-dessus l'écran principal ; chacune ajoute une entrée d'historique (#nom) pour que « retour » la ferme. */
+  /* Couches ouvertes par-dessus l'écran principal. Elles ne touchent pas à l'adresse de la page, qui peut être dans un cadre (artefact). */
   var LAYERS = { reglages: 'v-settings', historique: 'v-history', sauver: 'dlg-sauver', charger: 'dlg-charger', tirage: 'stage' };
   var PAGES = { reglages: 1, historique: 1 };
 
@@ -310,10 +310,9 @@
   }
 
   /* ----- Navigation entre les couches ----- */
-  function openLayer(name) { if (LAYERS[name] && ui.layer !== name) location.hash = name; }
-  function closeLayer() { if (ui.layer) history.back(); }
-  function route() {
-    var h = location.hash.slice(1), layer = LAYERS[h] ? h : '';
+  function openLayer(name) { if (LAYERS[name] && ui.layer !== name) route(name); }
+  function closeLayer() { if (ui.layer) route(''); }
+  function route(layer) {
     var prev = ui.layer;
     if (!PAGES[prev] && PAGES[layer]) ui.mainScroll = window.scrollY;
     ui.layer = layer;
@@ -327,7 +326,7 @@
       setTimeout(function () { $('#saveName').focus(); $('#saveName').select(); }, 50);
     }
     if (layer === 'tirage') {
-      if (!pendingDraw) { history.back(); return; }
+      if (!pendingDraw) { route(''); return; }
       document.body.style.overflow = 'hidden';
       scene.start(pendingDraw); pendingDraw = null;
     }
@@ -352,6 +351,8 @@
     var a = btn.dataset.act, d = btn.dataset, s = state.settings;
     switch (a) {
       case 'open': openLayer(d.layer); break;
+      case 'add': submitNames(); break;
+      case 'save-list': saveList(); break;
       case 'back': closeLayer(); break;
       case 'toggle': var p = state.players[Number(d.i)]; if (p) { p.present = !p.present; save(); renderPlayers(); } break;
       case 'del':
@@ -445,13 +446,14 @@
     if (v >= 2 && v <= 10) { state.settings.other = v; save(); renderDrawPanel(); }
   });
   $('#otherInput').addEventListener('blur', function (e) { e.target.value = state.settings.other; });
-  $('#addForm').addEventListener('submit', function (e) {
-    e.preventDefault();
+  // Pas de <form> : dans un cadre sécurisé (artefact), l'envoi de formulaire peut être bloqué.
+  function submitNames() {
     var inp = $('#nameInput');
     if (addNames(inp.value) || !inp.value.trim()) inp.value = '';
     else inp.select();
     inp.focus();
-  });
+  }
+  $('#nameInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submitNames(); } });
   // Au collage, les retours à la ligne deviennent des virgules pour garder les prénoms séparés.
   $('#nameInput').addEventListener('paste', function (e) {
     var cb = e.clipboardData || window.clipboardData; if (!cb) return;
@@ -460,14 +462,13 @@
     var el = e.target;
     el.setRangeText(txt.replace(/\s*[\r\n]+\s*/g, ', ').replace(/^,\s*|,\s*$/g, ''), el.selectionStart, el.selectionEnd, 'end');
   });
-  $('#saveForm').addEventListener('submit', function (e) { e.preventDefault(); saveList(); });
+  $('#saveName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveList(); } });
   $$('.sheet').forEach(function (sh) {
     sh.addEventListener('click', function (e) {
       if (e.target !== sh) return;
       if (sh.id === 'copySheet') sh.hidden = true; else closeLayer();
     });
   });
-  window.addEventListener('hashchange', route);
   if (window.matchMedia) {
     var mq = matchMedia('(prefers-color-scheme: dark)');
     if (mq.addEventListener) mq.addEventListener('change', applyTheme);
@@ -478,12 +479,11 @@
   if (Cap && Cap.isNativePlatform && Cap.isNativePlatform() && Cap.Plugins && Cap.Plugins.App) {
     Cap.Plugins.App.addListener('backButton', function () {
       if (!$('#copySheet').hidden) { $('#copySheet').hidden = true; return; }
-      if (ui.layer) history.back(); else Cap.Plugins.App.exitApp();
+      if (ui.layer) closeLayer(); else Cap.Plugins.App.exitApp();
     });
   }
 
   /* ----- Démarrage ----- */
-  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   save();
   applyTheme();
   renderMain();
