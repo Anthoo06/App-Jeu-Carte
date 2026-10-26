@@ -43,6 +43,19 @@ test('drawGroups : paires répétées signalées seulement si « éviter » est 
   assert.strictEqual(on.repeats, 1);
 });
 
+test('drawGroups : rapide même au pire (60 joueurs, groupes de 10, historique plein, contraintes)', () => {
+  const p = names(60);
+  const hist = [];
+  for (let d = 0; d < 50; d++) hist.push({ groups: L.drawGroups(p, opts({ size: 10 })).groups, bench: [] });
+  const apart = Array.from({ length: 10 }, (_, i) => ['J' + 2 * i, 'J' + (2 * i + 1)]);
+  const t0 = Date.now();
+  const r = L.drawGroups(p, opts({ size: 10, apart, together: [['J40', 'J41']], hist: L.pairCounts(hist), avoid: true }));
+  assert.ok(Date.now() - t0 < 400, 'trop lent : ' + (Date.now() - t0) + ' ms');
+  assert.strictEqual(r.violations, 0);
+  for (const [a, b] of apart) assert.ok(!r.groups.some(g => g.includes(a) && g.includes(b)));
+  assert.ok(r.groups.find(g => g.includes('J40')).includes('J41'));
+});
+
 test('drawGroups : moins de 2 joueurs → erreur', () => {
   assert.ok(L.drawGroups(['A'], opts()).error);
 });
@@ -96,6 +109,19 @@ test('prénoms qui ressemblent à des propriétés internes de JavaScript', () =
   const s = Store.sanitize({ v: 2, players: names.map(n => ({ name: n, present: true })), apart: [['Constructor', 'toString']] });
   assert.deepStrictEqual(s.players.map(p => p.name), names);
   assert.deepStrictEqual(s.apart, [['Constructor', 'toString']]);
+});
+
+test('import : identifiants rendus uniques (supprimer une liste ne supprime pas sa jumelle)', () => {
+  const s = Store.sanitize({ v: 2, players: [], lists: [{ id: 'x', name: 'A', players: ['a'] }, { id: 'x', name: 'B', players: ['b'] }],
+    history: [{ id: 'h', groups: [['a', 'b']] }, { id: 'h', groups: [['c', 'd']] }] });
+  assert.strictEqual(new Set(s.lists.map(l => l.id)).size, 2);
+  assert.strictEqual(new Set(s.history.map(h => h.id)).size, 2);
+});
+
+test('contraintes gardées pour les joueurs des listes sauvegardées', () => {
+  const s = Store.sanitize({ v: 2, players: ['Céline'], lists: [{ id: 'b', name: 'Bande', players: ['Kathia', 'Lucie'] }],
+    apart: [['Kathia', 'Lucie'], ['Inconnu', 'Lucie']] });
+  assert.deepStrictEqual(s.apart, [['Kathia', 'Lucie']]);
 });
 
 test('historique limité à 50, favoris gardés', () => {

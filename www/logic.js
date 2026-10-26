@@ -51,17 +51,34 @@ function buildUnits(players, together) {
   return Array.from(m.values());
 }
 
-function groupsCost(gu, apartSet, hist, avoid) {
-  let viol = 0, soft = 0;
-  for (const units of gu) {
-    const g = [].concat.apply([], units);
-    for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
-      const k = pk(g[i], g[j]);
-      if (apartSet.has(k)) viol++;
-      if (avoid) { const c = hist.get(k) || 0; soft += c * c; }
-    }
+/* Coûts de paires précalculés : W[i * n + j] = 1 000 000 si i et j sont « à séparer », plus (nombre de fois
+   déjà ensemble)² si l'on évite les répétitions. Les unités (joueurs ou blocs « à réunir ») sont des listes d'indices. */
+function pairWeights(players, apartSet, hist, avoid) {
+  const n = players.length, W = new Float64Array(n * n);
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    const k = pk(players[i], players[j]);
+    let w = apartSet.has(k) ? 1e6 : 0;
+    if (avoid) { const c = hist.get(k) || 0; w += c * c; }
+    W[i * n + j] = W[j * n + i] = w;
   }
-  return { viol, soft, total: viol * 1e6 + soft };
+  return W;
+}
+
+/* Coût entre l'unité u et les autres unités du groupe g (sauf celle d'indice skip). */
+function link(u, g, skip, W, n) {
+  let c = 0;
+  for (let k = 0; k < g.length; k++) {
+    if (k === skip) continue;
+    const v = g[k];
+    for (let x = 0; x < u.length; x++) { const row = u[x] * n; for (let y = 0; y < v.length; y++) c += W[row + v[y]]; }
+  }
+  return c;
+}
+
+function groupsCost(gu, W, n) {
+  let total = 0;
+  for (const g of gu) for (let k = 0; k < g.length; k++) total += link(g[k], g, k, W, n);
+  return total / 2;
 }
 
 function placeUnits(units, sizes, rnd) {
@@ -79,22 +96,23 @@ function placeUnits(units, sizes, rnd) {
   return gu;
 }
 
-function improve(gu, apartSet, hist, avoid, rnd, iters) {
-  let best = groupsCost(gu, apartSet, hist, avoid);
+/* Recherche locale : on échange deux unités de même taille entre deux groupes si le coût ne monte pas.
+   Seule la différence de coût des deux groupes touchés est calculée. */
+function improve(gu, W, n, rnd, iters) {
+  let total = groupsCost(gu, W, n);
   const ng = gu.length;
-  if (ng < 2) return best;
-  for (let it = 0; it < iters && best.total > 0; it++) {
+  if (ng < 2) return total;
+  for (let it = 0; it < iters && total > 0; it++) {
     const a = Math.floor(rnd() * ng);
     let b = Math.floor(rnd() * (ng - 1)); if (b >= a) b++;
     if (!gu[a].length || !gu[b].length) continue;
     const ia = Math.floor(rnd() * gu[a].length), ib = Math.floor(rnd() * gu[b].length);
-    if (gu[a][ia].length !== gu[b][ib].length) continue;
     const ua = gu[a][ia], ub = gu[b][ib];
-    gu[a][ia] = ub; gu[b][ib] = ua;
-    const c = groupsCost(gu, apartSet, hist, avoid);
-    if (c.total <= best.total) best = c; else { gu[a][ia] = ua; gu[b][ib] = ub; }
+    if (ua.length !== ub.length) continue;
+    const delta = link(ub, gu[a], ia, W, n) + link(ua, gu[b], ib, W, n) - link(ua, gu[a], ia, W, n) - link(ub, gu[b], ib, W, n);
+    if (delta <= 0) { gu[a][ia] = ub; gu[b][ib] = ua; total += delta; }
   }
-  return best;
+  return total;
 }
 
 function pairCounts(history) {
@@ -140,26 +158,31 @@ function drawGroups(present, o, rnd) {
   }
   const avoid = !!o.avoid && o.hist.size > 0;
   const search = apart.length > 0 || avoid;
+  const np = players.length, index = new Map(players.map((p, i) => [p, i]));
+  const W = pairWeights(players, apartSet, o.hist, avoid);
+  const unitIdx = units.map(u => u.map(p => index.get(p)));
   const rounds = search ? 250 : 200;
-  let best = null, bestCost = null;
+  let best = null, bestTotal = Infinity;
   for (let t = 0; t < rounds; t++) {
-    const gu = placeUnits(units, plan.sizes, rnd);
+    const gu = placeUnits(unitIdx, plan.sizes, rnd);
     if (!gu) continue;
-    const c = search ? improve(gu, apartSet, o.hist, avoid, rnd, 400) : groupsCost(gu, apartSet, o.hist, false);
-    if (!best || c.total < bestCost.total) {
+    const c = search ? improve(gu, W, np, rnd, 400) : 0;
+    if (!best || c < bestTotal) {
       best = gu.map(g => g.map(u => u.slice()));
-      bestCost = c;
+      bestTotal = c;
     }
-    if (!search || bestCost.total === 0) break;
+    if (!search || bestTotal === 0) break;
   }
   if (!best) return { error: 'Impossible de former ces groupes avec les contraintes « à réunir ».' };
-  const groups = best.map(g => shuffled([].concat.apply([], g), rnd));
-  // Les paires répétées ne sont signalées que si l'on a demandé à les éviter.
-  let repeats = 0;
-  if (o.avoid) for (const g of groups) for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
-    if ((o.hist.get(pk(g[i], g[j])) || 0) > 0) repeats++;
+  const groups = best.map(g => shuffled([].concat.apply([], g).map(i => players[i]), rnd));
+  let repeats = 0, violations = 0;
+  for (const g of groups) for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
+    const k = pk(g[i], g[j]);
+    if (apartSet.has(k)) violations++;
+    // Les paires répétées ne sont signalées que si l'on a demandé à les éviter.
+    if (o.avoid && (o.hist.get(k) || 0) > 0) repeats++;
   }
-  return { groups: shuffled(groups, rnd), bench, violations: bestCost.viol, repeats };
+  return { groups: shuffled(groups, rnd), bench, violations, repeats };
 }
 
 if (typeof module !== 'undefined') module.exports = { shuffled, pk, balancedSizes, planSizes, buildUnits, drawGroups, pairCounts, benchCountsOf };

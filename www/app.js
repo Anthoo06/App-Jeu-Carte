@@ -76,9 +76,9 @@
     if (d.bench && d.bench.length) lines.push('Sur le banc : ' + d.bench.join(', '));
     return lines.join('\n');
   }
-  /* Retire les contraintes qui citent un joueur qui n'est plus dans la liste. */
+  /* Retire les contraintes qui citent un joueur qui n'existe plus (ni présent, ni dans une liste sauvegardée). */
   function pruneConstraints() {
-    var names = state.players.map(function (p) { return p.name; });
+    var names = Store.knownNames(state);
     state.apart = Store.cleanPairs(state.apart, names);
     state.together = Store.cleanPairs(state.together, names);
   }
@@ -115,7 +115,9 @@
       $('#bench').checked = s.bench;
       $('#benchLbl').textContent = 'Mettre ' + rest + ' joueur' + (rest > 1 ? 's' : '') + ' sur le banc';
     }
-    var nc = state.apart.length + state.together.length;
+    // Seules comptent les contraintes dont les deux joueurs sont dans la liste actuelle.
+    var here = Object.create(null); state.players.forEach(function (p) { here[p.name] = 1; });
+    var nc = state.apart.concat(state.together).filter(function (q) { return here[q[0]] && here[q[1]]; }).length;
     var cl = $('#consLine');
     cl.hidden = !nc;
     if (nc) cl.innerHTML = nc + ' contrainte' + (nc > 1 ? 's' : '') + ' active' + (nc > 1 ? 's' : '') + ' · <button type="button" class="link" data-act="open" data-layer="contraintes">voir</button>';
@@ -201,9 +203,12 @@
   }
   function renderCons() {
     ['#apartA', '#apartB', '#togA', '#togB'].forEach(function (s) { fillSelect($(s)); });
+    var here = Object.create(null); state.players.forEach(function (p) { here[p.name] = 1; });
     function rows(list, kind) {
       return list.map(function (p, i) {
-        return '<li class="row"><span class="rname">' + esc(p[0]) + (kind === 'apart' ? ' ≠ ' : ' + ') + esc(p[1]) + '</span><button type="button" class="x" data-act="cons-del" data-kind="' + kind + '" data-i="' + i + '" aria-label="Retirer cette contrainte">×</button></li>';
+        // Contrainte en attente (un des deux joueurs n'est pas dans la liste actuelle) : affichée en grisé.
+        var off = !(here[p[0]] && here[p[1]]);
+        return '<li class="row' + (off ? ' idle' : '') + '"' + (off ? ' title="Un des deux joueurs n\'est pas dans la liste actuelle"' : '') + '><span class="rname">' + esc(p[0]) + (kind === 'apart' ? ' ≠ ' : ' + ') + esc(p[1]) + '</span><button type="button" class="x" data-act="cons-del" data-kind="' + kind + '" data-i="' + i + '" aria-label="Retirer cette contrainte">×</button></li>';
       }).join('');
     }
     $('#apartList').innerHTML = rows(state.apart, 'apart');
@@ -214,7 +219,7 @@
     $$('#v-settings [data-set]').forEach(function (el) { el.checked = !!s[el.dataset.set]; });
     $$('#v-settings [data-act="set"]').forEach(function (b) { b.setAttribute('aria-pressed', String(String(s[b.dataset.k]) === b.dataset.v)); });
     var nc = state.apart.length + state.together.length;
-    $('#consCount').textContent = nc ? nc + ' active' + (nc > 1 ? 's' : '') : 'aucune';
+    $('#consCount').textContent = nc ? String(nc) : 'aucune';
   }
   function renderBackup() {
     $('#exportBox').value = Store.exportText(state);
@@ -331,8 +336,8 @@
         var l = state.lists.find(function (x) { return x.id === d.id; }); if (!l) break;
         state.players = l.players.map(function (x) { return { name: x.name, present: x.present }; });
         state.meta.example = false; ui.listName = l.name;
-        pruneConstraints(); save(); closeLayer(); renderPlayers(); toast('« ' + l.name + ' » chargée'); break;
-      case 'list-del': state.lists = state.lists.filter(function (x) { return x.id !== d.id; }); save(); renderLists(); break;
+        save(); closeLayer(); renderPlayers(); toast('« ' + l.name + ' » chargée'); break;
+      case 'list-del': state.lists = state.lists.filter(function (x) { return x.id !== d.id; }); pruneConstraints(); save(); renderLists(); break;
       case 'cons-add':
         var kind = d.kind, A = kind === 'apart' ? '#apartA' : '#togA', B = kind === 'apart' ? '#apartB' : '#togB';
         var x1 = $(A).value, x2 = $(B).value, cm = $('#consMsg');
@@ -416,6 +421,10 @@
 
   // Échap (sur ordinateur) : comme le bouton retour, ferme la fenêtre ou la page ouverte.
   document.addEventListener('keydown', function (e) {
+    // Dans la scène, Entrée ou Espace font comme un appui sur la carte (si aucun bouton n'a le focus).
+    if (ui.layer === 'tirage' && (e.key === 'Enter' || e.key === ' ') && !e.target.closest('button')) {
+      e.preventDefault(); $('.stage-center').click(); return;
+    }
     if (e.key !== 'Escape') return;
     if (!$('#copySheet').hidden) $('#copySheet').hidden = true; else closeLayer();
   });

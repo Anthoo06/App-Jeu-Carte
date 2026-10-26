@@ -70,6 +70,8 @@ ul { list-style: none; }
 .drawbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 18px 16px max(14px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, var(--bg) 22px); }
 .drawbar > * { width: 100%; max-width: 528px; }
+/* Pendant la saisie des prénoms, le clavier est ouvert : le bouton de tirage s'efface pour laisser la place. */
+.main:has(#nameInput:focus) .drawbar { display: none; }
 .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .chip { position: relative; cursor: pointer; }
 .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -179,6 +181,7 @@ select { appearance: none; padding-right: 36px;
 .rows:empty { display: none; }
 .row { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 12px; padding: 4px 4px 4px 14px; background: var(--surface); }
 .row .rname { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.row.idle .rname { opacity: .45; }
 .row .x { flex: none; width: 44px; height: 44px; border: 0; background: none; font-size: 20px; color: var(--muted); border-radius: 10px; }
 .row .x.armed { background: var(--warn-bg); color: var(--warn); font-size: 13px; width: auto; padding: 0 10px; }
 .row.pick { padding: 0; }
@@ -221,6 +224,8 @@ html.locked, html.locked body { overflow: hidden; }
 .stage-center { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1200px; min-height: 0; cursor: pointer; }
 .stage-hint { min-height: 24px; color: var(--muted); font-size: 15px; text-align: center; padding: 0 16px; }
 .scard { width: clamp(150px, min(68vw, 290px, calc((100vh - 330px) / 1.4)), 290px); aspect-ratio: 5 / 7; will-change: transform; }
+/* Hauteur réellement visible (sans la barre d'adresse des navigateurs mobiles), quand c'est pris en charge. */
+@supports (height: 100dvh) { .scard { width: clamp(150px, min(68vw, 290px, calc((100dvh - 330px) / 1.4)), 290px); } }
 .sflip { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.22, .8, .24, 1); will-change: transform; }
 .sflip.down { transform: rotateY(180deg); }
 .sface { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; }

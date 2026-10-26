@@ -84,18 +84,31 @@ var Store = (function (L) {
     for (var i = history.length - 1; i >= 0 && extra > 0; i--) { if (!history[i].fav) { history.splice(i, 1); extra--; } }
     return history;
   }
+  function knownNames(st) {
+    var names = st.players.map(function (p) { return p.name; });
+    st.lists.forEach(function (l) { l.players.forEach(function (p) { names.push(p.name); }); });
+    return names;
+  }
+  /* Donne un nouvel identifiant à tout élément dont l'identifiant est déjà pris. */
+  function uniqueIds(arr) {
+    var seen = Object.create(null);
+    arr.forEach(function (x) { while (seen[x.id]) x.id = uid(); seen[x.id] = 1; });
+    return arr;
+  }
   function sanitize(o) {
     var d = defaults();
     if (!o || typeof o !== 'object') return d;
     var v1 = o.v !== 2;
     d.players = cleanPlayers(o.players);
-    var names = d.players.map(function (p) { return p.name; });
     d.lists = (Array.isArray(o.lists) ? o.lists : []).slice(0, 100).map(function (l) {
       return { id: clean(l && l.id, 40) || uid(), name: clean(l && l.name, 40) || 'Liste', players: cleanPlayers(l && l.players) };
     }).filter(function (l) { return l.players.length; });
+    uniqueIds(d.lists);
+    // Les contraintes restent valables pour les joueurs présents ou ceux des listes sauvegardées.
+    var names = knownNames(d);
     d.apart = cleanPairs(o.apart, names);
     d.together = cleanPairs(o.together, names);
-    d.history = trimHistory((Array.isArray(o.history) ? o.history : []).map(cleanDraw).filter(Boolean).slice(0, 500));
+    d.history = trimHistory(uniqueIds((Array.isArray(o.history) ? o.history : []).map(cleanDraw).filter(Boolean).slice(0, 500)));
     d.last = cleanDraw(o.last);
     d.settings = v1 ? migrateSettings(o.settings) : cleanSettings(o.settings);
     d.meta = { example: !!(o.meta && o.meta.example) && d.players.length > 0 };
@@ -119,7 +132,7 @@ var Store = (function (L) {
 
   return {
     MAXP: MAXP, MAXLEN: MAXLEN, HIST_LIMIT: HIST_LIMIT, DEF: DEF,
-    clean: clean, uid: uid, groupSize: groupSize, leftover: leftover, defaults: defaults, firstRun: firstRun,
+    clean: clean, uid: uid, knownNames: knownNames, groupSize: groupSize, leftover: leftover, defaults: defaults, firstRun: firstRun,
     cleanPlayers: cleanPlayers, cleanPairs: cleanPairs, cleanSettings: cleanSettings, migrateSettings: migrateSettings,
     trimHistory: trimHistory, sanitize: sanitize, parseExport: parseExport, exportText: exportText
   };

@@ -167,3 +167,12 @@ Divers : APK verrouillé en portrait (tools/android-portrait.js), taille minimal
 - Échap ferme la fenêtre ou la page ouverte (artefact sur ordinateur).
 - Dépendances : l'appli n'en embarque aucune vulnérable ; les alertes npm concernent seulement les outils de fabrication (générateur d'icônes) qui tournent sur nos propres fichiers.
 - Limites connues : la clé de signature de l'APK est publique dans le dépôt (pratique pour les mises à jour, mais n'importe qui pourrait signer un APK « compatible ») ; l'APK est une version de débogage.
+
+## Chasse aux bugs et optimisations (2026-10-26, suite)
+
+- Tirage 30 à 55 fois plus rapide dans le pire cas (60 joueurs, groupes de 10, historique plein, contraintes : 1,5 s → 27 ms) : poids des paires précalculés et seule la différence de coût est calculée à chaque échange. Test de rapidité ajouté.
+- Les contraintes ne sont plus effacées en chargeant une liste où un des joueurs manque : elles restent tant qu'un des joueurs existe (présent ou dans une liste sauvegardée), s'appliquent dès que les deux sont là, et sont grisées sinon. La ligne « N contraintes actives » ne compte que celles qui s'appliquent.
+- Import : identifiants de listes et de tirages rendus uniques (supprimer une liste ne supprime plus sa jumelle).
+- Grande carte calée sur la hauteur réellement visible (barre d'adresse des navigateurs mobiles).
+- Le bouton de tirage s'efface pendant la saisie des prénoms (clavier ouvert).
+- Clavier sur ordinateur : Entrée ou Espace avancent dans la scène.
