@@ -282,13 +282,11 @@
     }
     if (layer === 'tirage') {
       if (!pendingDraw) { closeLayer(); return; }
-      document.body.style.overflow = 'hidden';
       scene.start(pendingDraw.draw, pendingDraw.instant); pendingDraw = null;
     }
-    if (prev === 'tirage' && layer !== 'tirage') {
-      scene.stop();
-      document.body.style.overflow = '';
-    }
+    if (prev === 'tirage' && layer !== 'tirage') scene.stop();
+    // La page derrière une fenêtre ou la scène ne défile pas.
+    document.documentElement.classList.toggle('locked', layer === 'tirage' || layer === 'listes');
     if (PAGES[layer] && layer !== prev) window.scrollTo(0, 0);
     else if (!layer && PAGES[prev]) { renderMain(); window.scrollTo(0, ui.mainScroll); }
   }
