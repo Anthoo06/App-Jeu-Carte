@@ -165,7 +165,8 @@ select { appearance: none; padding-right: 36px;
 .dealing .flip { animation: deal .45s backwards cubic-bezier(.2, .8, .2, 1); animation-delay: calc(var(--i) * 70ms); }
 @keyframes deal { from { opacity: 0; transform: translateY(-24px) scale(.95); } to { opacity: 1; } }
 .dealing .flip.down { animation-name: deal-down; }
-@keyframes deal-down { from { opacity: 0; transform: rotateY(180deg) translateY(-24px); } to { opacity: 1; transform: rotateY(180deg); } }
+/* Sans fondu : une carte semi-transparente est « aplatie » par le navigateur et montrerait son recto en miroir. */
+@keyframes deal-down { from { transform: rotateY(180deg) translateY(-40px) scale(.9); } to { transform: rotateY(180deg); } }
 
 /* Listes (contraintes, sauvegardes) */
 .rows { display: flex; flex-direction: column; gap: 8px; }
