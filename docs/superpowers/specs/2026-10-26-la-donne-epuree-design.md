@@ -114,3 +114,14 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 - Sur l'écran principal, sous l'aperçu, la case « Mettre N joueur(s) sur le banc » n'apparaît que si le nombre de présents ne tombe pas juste pour la taille choisie. N est le reste de la division.
 - Case cochée : les joueurs en trop vont sur le banc, à tour de rôle. Case décochée : on suit le réglage « Si le compte n'est pas rond » des Paramètres, qui ne propose plus que Agrandir des groupes / Un groupe plus petit. Le choix est mémorisé (`settings.bench`).
 - L'ancien réglage « Remplaçants » est converti en case cochée. « Remplaçants » devient « Sur le banc » partout.
+
+## Ajout : scène de tirage animée (2026-10-26)
+
+- Avec « Animation » (activé par défaut), « Tirer au sort » ouvre une scène plein écran (`#tirage`, fermée par le bouton retour). Code dans `www/stage.js`.
+- Chaque groupe arrive au centre, minuscule, et grandit en tournant (1,3 s). Les vibrations s'intensifient en fréquence et en force (module Haptics de Capacitor dans l'APK, `navigator.vibrate` ailleurs).
+- Mode suspense : la carte se pose de dos. Un appui déclenche une musique d'1 s avec des vibrations et une secousse, puis la carte se retourne avec un carillon.
+- Carte révélée : un appui la range dans la rangée du bas, puis la carte suivante arrive. Le banc passe en dernier. À la fin, le bouton « Terminé » ferme la scène, et le résultat reste affiché sur l'écran principal.
+- La rangée du bas défile au doigt, sans barre. Les cartes s'inclinent (rotateY) selon la vitesse de défilement, puis se redressent.
+- « Tout révéler » range directement tout ce qui reste.
+- Nouveau réglage « Son » (activé par défaut). Le son est synthétisé en Web Audio dans `www/sound.js`, sans fichier.
+- « Animation » désactivée, ou mouvements réduits demandés par le téléphone : affichage direct sous le bouton, comme avant.

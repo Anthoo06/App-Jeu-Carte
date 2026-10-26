@@ -4,7 +4,7 @@
   var KEY = 'la-donne:v2', OLD_KEY = 'la-donne:v1';
   var NB_COLORS = 8;
   /* Couches ouvertes par-dessus l'écran principal ; chacune ajoute une entrée d'historique (#nom) pour que « retour » la ferme. */
-  var LAYERS = { reglages: 'v-settings', historique: 'v-history', sauver: 'dlg-sauver', charger: 'dlg-charger' };
+  var LAYERS = { reglages: 'v-settings', historique: 'v-history', sauver: 'dlg-sauver', charger: 'dlg-charger', tirage: 'stage' };
   var PAGES = { reglages: 1, historique: 1 };
 
   var $ = function (s) { return document.querySelector(s); };
@@ -15,6 +15,7 @@
   var storageOk = true;
   var ui = { favOnly: false, down: [], layer: '', mainScroll: 0, listName: '' };
   var drawing = false;
+  var pendingDraw = null;
 
   /* ----- Stockage ----- */
   function loadState() {
@@ -39,6 +40,13 @@
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('on'); }, 2200);
   }
   function buzz(ms) { if (state.settings.vibrate && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* ignoré */ } } }
+  /* Vibration de force 1 (légère) à 3 (forte) : vraie force dans l'APK, durée plus longue dans un navigateur. */
+  function haptic(level) {
+    if (!state.settings.vibrate) return;
+    var H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+    if (H && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) { H.impact({ style: ['LIGHT', 'MEDIUM', 'HEAVY'][level - 1] }).catch(function () {}); return; }
+    buzz([8, 18, 35][level - 1]);
+  }
   function reduced() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function fmtDate(ts) {
     try { return new Date(ts).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -173,12 +181,22 @@
     state.last = { id: entry.id, ts: entry.ts, fav: false, groups: r.groups, bench: r.bench, violations: r.violations, repeats: r.repeats };
     state.history.unshift(entry);
     Store.trimHistory(state.history);
-    ui.down = s.suspense ? r.groups.map(function () { return true; }) : [];
-    renderResult(true);
-    buzz(25);
+    // Avec « Animation », les groupes sortent un par un dans la scène ; sinon tout s'affiche sous le bouton.
+    var staged = s.anim && !reduced();
+    ui.down = s.suspense && !staged ? r.groups.map(function () { return true; }) : [];
+    renderResult(!staged);
     save();
-    var rb = $('#result');
-    try { rb.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); } catch (e) { /* ignoré */ }
+    if (staged) {
+      if (s.sound) Son.unlock();
+      pendingDraw = state.last;
+      openLayer('tirage');
+      return;
+    }
+    buzz(25);
+    scrollToResult();
+  }
+  function scrollToResult() {
+    try { $('#result').scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); } catch (e) { /* ignoré */ }
   }
 
   function addNames(text) {
@@ -308,9 +326,25 @@
       $('#saveName').value = ui.listName; $('#saveMsg').textContent = '';
       setTimeout(function () { $('#saveName').focus(); $('#saveName').select(); }, 50);
     }
+    if (layer === 'tirage') {
+      if (!pendingDraw) { history.back(); return; }
+      document.body.style.overflow = 'hidden';
+      scene.start(pendingDraw); pendingDraw = null;
+    }
+    if (prev === 'tirage' && layer !== 'tirage') {
+      scene.stop();
+      document.body.style.overflow = '';
+      scrollToResult();
+    }
     if (PAGES[layer]) window.scrollTo(0, 0);
     else if (PAGES[prev]) { renderMain(); window.scrollTo(0, ui.mainScroll); }
   }
+
+  var scene = Scene({
+    el: $('#stage'), esc: esc, color: gColor, haptic: haptic, sound: Son,
+    settings: function () { return state.settings; },
+    onDone: function () { closeLayer(); }
+  });
   function renderMain() { renderPlayers(); renderResult(false); }
 
   /* ----- Actions ----- */

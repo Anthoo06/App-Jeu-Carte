@@ -111,7 +111,8 @@
 
   <section class="block">
     <h2>Ambiance</h2>
-    <label class="switch"><input type="checkbox" data-set="anim"><span class="track"></span><span class="lbl">Animation du tirage</span></label>
+    <label class="switch"><input type="checkbox" data-set="anim"><span class="track"></span><span class="lbl">Animation<small>Les cartes arrivent une par une au centre de l'écran.</small></span></label>
+    <label class="switch"><input type="checkbox" data-set="sound"><span class="track"></span><span class="lbl">Son<small>Musique du mode suspense.</small></span></label>
     <label class="switch"><input type="checkbox" data-set="vibrate"><span class="track"></span><span class="lbl">Vibration</span></label>
     <label class="field"><span>Thème</span>
       <select id="s-theme" data-set="theme">
@@ -186,6 +187,18 @@
   </div>
 </div>
 
+<!-- SCÈNE DE TIRAGE (avec « Animation ») -->
+<div id="stage" class="stage" hidden role="dialog" aria-label="Tirage">
+  <div class="stage-top">
+    <span class="stage-count mono"></span>
+    <button type="button" class="link stage-skip">Tout révéler</button>
+  </div>
+  <div class="stage-center"></div>
+  <p class="stage-hint" aria-live="polite"></p>
+  <button type="button" class="btn primary stage-done" hidden>Terminé</button>
+  <div class="tray" aria-label="Groupes sortis"></div>
+</div>
+
 <!-- COPIE MANUELLE (si le presse-papiers est bloqué) -->
 <div id="copySheet" class="sheet" hidden>
   <div class="sheetbox" role="dialog" aria-label="Copier le texte">
@@ -199,6 +212,8 @@
 
 <script src="logic.js"></script>
 <script src="store.js"></script>
+<script src="sound.js"></script>
+<script src="stage.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
