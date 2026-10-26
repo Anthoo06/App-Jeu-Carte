@@ -1,0 +1,68 @@
+name: APK Android
+
+# À chaque envoi sur GitHub, fabrique l'APK et le publie dans la release « apk »
+# (onglet Releases du dépôt), prêt à télécharger depuis le téléphone.
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Générer le projet Android (icônes, écran de démarrage, page web)
+        run: npm run android:prepare
+
+      - name: Numéro de version
+        run: |
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      # Toujours la même clé de signature : chaque nouvel APK s'installe par-dessus
+      # l'ancien sans effacer les joueurs, listes et historique.
+      - name: Clé de signature
+        run: mkdir -p ~/.android && cp android-debug.keystore ~/.android/debug.keystore
+
+      - name: Compiler l'APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Renommer
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk La-Donne.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: La-Donne-apk
+          path: La-Donne.apk
+
+      - name: Publier dans la release « apk »
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk --yes --cleanup-tag || true
+          gh release create apk La-Donne.apk \
+            --target "$GITHUB_SHA" \
+            --title "La Donne — APK Android (version 1.0.${{ github.run_number }})" \
+            --notes "Ouvre cette page sur ton téléphone Android, touche **La-Donne.apk** pour le télécharger, puis ouvre le fichier pour l'installer (autorise « installer des applis inconnues » si demandé). Une nouvelle version s'installe par-dessus l'ancienne sans perdre tes données."

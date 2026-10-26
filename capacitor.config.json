@@ -1,0 +1,10 @@
+{
+  "appId": "com.anthoo06.ladonne",
+  "appName": "La Donne",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+node_modules/
+# Généré à chaque build par « npm run android:prepare »
+android/
