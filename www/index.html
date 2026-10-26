@@ -55,6 +55,7 @@
     </label>
     <label class="check"><input type="checkbox" id="avoid" data-set="avoid"><span class="box" aria-hidden="true"></span><span>Éviter les paires déjà vues</span></label>
     <p id="preview" class="preview"></p>
+    <label id="benchRow" class="check" hidden><input type="checkbox" id="bench" data-set="bench"><span class="box" aria-hidden="true"></span><span id="benchLbl"></span></label>
     <p id="consLine" class="hint" hidden></p>
     <button id="drawBtn" type="button" class="btn primary" data-act="draw">Tirer au sort</button>
     <p id="drawErr" class="err" role="alert"></p>
@@ -73,11 +74,10 @@
 
   <section class="block">
     <h2>Tirage</h2>
-    <label class="field"><span>Si le compte n'est pas rond</span>
+    <label class="field"><span>Si le compte n'est pas rond (sans banc)</span>
       <select id="s-leftover" data-set="leftover">
         <option value="bigger">Agrandir des groupes</option>
         <option value="smaller">Un groupe plus petit</option>
-        <option value="bench">Remplaçants (à tour de rôle)</option>
       </select>
     </label>
     <label class="switch"><input type="checkbox" data-set="suspense"><span class="track"></span><span class="lbl">Mode suspense<small>Les cartes arrivent face cachée, tu les retournes une par une.</small></span></label>

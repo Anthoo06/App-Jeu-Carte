@@ -51,7 +51,7 @@
   function describeSizes(sizes, bench) {
     var cnt = {}; sizes.forEach(function (s) { cnt[s] = (cnt[s] || 0) + 1; });
     var t = Object.keys(cnt).map(Number).sort(function (a, b) { return b - a; }).map(function (s) { return cnt[s] + ' ' + sizeWord(s, cnt[s] > 1); }).join(' + ');
-    if (bench) t += ' + ' + bench + (bench > 1 ? ' remplaçants' : ' remplaçant');
+    if (bench) t += ' + ' + bench + ' sur le banc';
     return t;
   }
   function gColor(i) { return 'var(--g' + (i % NB_COLORS) + ')'; }
@@ -64,7 +64,7 @@
   function drawText(d) {
     var lines = ['La Donne · ' + fmtDate(d.ts)];
     d.groups.forEach(function (g, i) { lines.push('Groupe ' + (i + 1) + ' : ' + g.join(', ')); });
-    if (d.bench && d.bench.length) lines.push('Remplaçants : ' + d.bench.join(', '));
+    if (d.bench && d.bench.length) lines.push('Sur le banc : ' + d.bench.join(', '));
     return lines.join('\n');
   }
   /* Retire les contraintes qui citent un joueur qui n'est plus dans la liste. */
@@ -94,11 +94,18 @@
     $('#otherRow').hidden = s.pick !== 0;
     if (document.activeElement !== $('#otherInput')) $('#otherInput').value = s.other;
     $('#avoid').checked = s.avoid;
-    var p = $('#preview');
+    var p = $('#preview'), k = Store.groupSize(s);
     if (n < 2) p.textContent = 'Il faut au moins 2 joueurs présents.';
     else {
-      var plan = planSizes(n, { size: Store.groupSize(s), leftover: s.leftover });
+      var plan = planSizes(n, { size: k, leftover: Store.leftover(s) });
       p.textContent = n + ' joueurs → ' + describeSizes(plan.sizes, plan.bench);
+    }
+    // La case « banc » n'apparaît que si le compte ne tombe pas juste.
+    var rest = n > k ? n % k : 0;
+    $('#benchRow').hidden = !rest;
+    if (rest) {
+      $('#bench').checked = s.bench;
+      $('#benchLbl').textContent = 'Mettre ' + rest + ' joueur' + (rest > 1 ? 's' : '') + ' sur le banc';
     }
     var nc = state.apart.length + state.together.length;
     var cl = $('#consLine');
@@ -131,7 +138,7 @@
     h += '<div class="cards' + (animate && state.settings.anim && !reduced() ? ' dealing' : '') + '">';
     L.groups.forEach(function (g, i) { h += cardHTML(g, i, !!ui.down[i], anyDown); });
     if (L.bench.length) {
-      h += '<div class="flip bench" style="--i:' + L.groups.length + '" role="group" aria-label="Remplaçants"><div class="face front"><span class="glabel">Remplaçant' + (L.bench.length > 1 ? 's' : '') + '</span>' +
+      h += '<div class="flip bench" style="--i:' + L.groups.length + '" role="group" aria-label="Sur le banc"><div class="face front"><span class="glabel">Sur le banc</span>' +
         L.bench.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</div></div>';
     }
     h += '</div>';
@@ -156,7 +163,7 @@
     var s = state.settings, err = $('#drawErr');
     err.textContent = '';
     var r = drawGroups(presentNames(), {
-      size: Store.groupSize(s), leftover: s.leftover,
+      size: Store.groupSize(s), leftover: Store.leftover(s),
       together: state.together, apart: state.apart,
       hist: pairCounts(state.history), avoid: s.avoid,
       benchCounts: benchCountsOf(state.history)
@@ -265,7 +272,7 @@
     $('#hlist').innerHTML = list.length ? list.map(function (d) {
       return '<li class="h' + (d.fav ? ' fav' : '') + '"><span class="when">' + esc(fmtDate(d.ts)) + '</span><ul class="hg">' +
         d.groups.map(function (g, i) { return '<li style="--c:' + gColor(i) + '"><i aria-hidden="true"></i><span>' + g.map(esc).join(', ') + '</span></li>'; }).join('') +
-        (d.bench.length ? '<li style="--c:var(--muted)"><i aria-hidden="true"></i><span>Remplaçants : ' + d.bench.map(esc).join(', ') + '</span></li>' : '') +
+        (d.bench.length ? '<li style="--c:var(--muted)"><i aria-hidden="true"></i><span>Sur le banc : ' + d.bench.map(esc).join(', ') + '</span></li>' : '') +
         '</ul><div class="tools"><button type="button" class="btn" data-act="h-fav" data-id="' + esc(d.id) + '" aria-pressed="' + d.fav + '">' + (d.fav ? '★ Favori' : '☆ Favori') + '</button>' +
         '<button type="button" class="btn" data-act="h-copy" data-id="' + esc(d.id) + '">Copier</button>' +
         '<button type="button" class="btn" data-act="h-del" data-confirm data-id="' + esc(d.id) + '" aria-label="Supprimer ce tirage">×</button></div></li>';

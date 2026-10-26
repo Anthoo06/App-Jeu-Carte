@@ -71,7 +71,7 @@ test('conversion v1 → v2', () => {
 test('export puis import : tout revient, réglages compris, sans résultat affiché', () => {
   const st = Store.defaults();
   st.players = [{ name: 'Alice', present: true }, { name: 'Bob', present: false }];
-  st.settings = Object.assign({}, Store.DEF, { pick: 0, other: 5, avoid: false, suspense: true, showHistory: true, leftover: 'bench' });
+  st.settings = Object.assign({}, Store.DEF, { pick: 0, other: 5, avoid: false, suspense: true, showHistory: true, leftover: 'smaller', bench: true });
   st.last = { id: 'l', ts: 1, groups: [['Alice', 'Bob']], bench: [] };
   const back = Store.parseExport(Store.exportText(st));
   assert.deepStrictEqual(back.players, st.players);
@@ -79,6 +79,16 @@ test('export puis import : tout revient, réglages compris, sans résultat affic
   assert.strictEqual(back.last, null);
   assert.strictEqual(Store.parseExport('pas du json'), null);
   assert.strictEqual(Store.parseExport('{"a":1}'), null);
+});
+
+test('ancien réglage « Remplaçants » → case banc cochée', () => {
+  const v1 = Store.sanitize({ v: 1, players: [], settings: { size: 2, leftover: 'bench' } }).settings;
+  assert.strictEqual(v1.bench, true);
+  assert.strictEqual(v1.leftover, 'bigger');
+  const v2 = Store.sanitize({ v: 2, players: [], settings: { leftover: 'bench' } }).settings;
+  assert.strictEqual(v2.bench, true);
+  assert.strictEqual(Store.leftover(v2), 'bench');
+  assert.strictEqual(Store.leftover(Object.assign({}, v2, { bench: false })), 'bigger');
 });
 
 test('historique limité à 50, favoris gardés', () => {

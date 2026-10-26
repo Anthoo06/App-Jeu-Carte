@@ -108,3 +108,9 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
   - Historique ;
   - fenêtres Sauvegarder et Charger.
 - Envoi sur GitHub, puis contrôle que le workflow APK est vert.
+
+## Ajout : case « banc » (2026-10-26)
+
+- Sur l'écran principal, sous l'aperçu, la case « Mettre N joueur(s) sur le banc » n'apparaît que si le nombre de présents ne tombe pas juste pour la taille choisie. N est le reste de la division.
+- Case cochée : les joueurs en trop vont sur le banc, à tour de rôle. Case décochée : on suit le réglage « Si le compte n'est pas rond » des Paramètres, qui ne propose plus que Agrandir des groupes / Un groupe plus petit. Le choix est mémorisé (`settings.bench`).
+- L'ancien réglage « Remplaçants » est converti en case cochée. « Remplaçants » devient « Sur le banc » partout.

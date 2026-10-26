@@ -3,12 +3,15 @@
 var Store = (function (L) {
   'use strict';
   var MAXP = 60, MAXLEN = 24, HIST_LIMIT = 50;
-  var DEF = { pick: 2, other: 4, leftover: 'bigger', avoid: true, suspense: false, showHistory: false, anim: true, vibrate: true, theme: 'auto' };
-  var CHOICES = { pick: [2, 3, 0], leftover: ['bigger', 'smaller', 'bench'], theme: ['auto', 'light', 'dark'] };
-  var BOOLS = ['avoid', 'suspense', 'showHistory', 'anim', 'vibrate'];
+  var DEF = { pick: 2, other: 4, leftover: 'bigger', bench: false, avoid: true, suspense: false, showHistory: false, anim: true, vibrate: true, theme: 'auto' };
+  var CHOICES = { pick: [2, 3, 0], leftover: ['bigger', 'smaller'], theme: ['auto', 'light', 'dark'] };
+  var BOOLS = ['bench', 'avoid', 'suspense', 'showHistory', 'anim', 'vibrate'];
 
   function clean(s, max) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max || MAXLEN); }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  /* Gestion du reste effective : le banc s'il est coché, sinon le choix des Paramètres. */
+  function leftover(s) { return s.bench ? 'bench' : s.leftover; }
 
   /* Taille de groupe effective : 2, 3, ou la valeur « Autre ». */
   function groupSize(s) { return s.pick === 0 ? s.other : s.pick; }
@@ -60,6 +63,8 @@ var Store = (function (L) {
     o = (o && typeof o === 'object') ? o : {};
     Object.keys(CHOICES).forEach(function (k) { if (CHOICES[k].indexOf(o[k]) >= 0) s[k] = o[k]; });
     BOOLS.forEach(function (k) { if (typeof o[k] === 'boolean') s[k] = o[k]; });
+    // Ancien réglage « Remplaçants » dans le choix du reste : devient la case « banc ».
+    if (o.leftover === 'bench' && typeof o.bench !== 'boolean') s.bench = true;
     var ot = Math.round(Number(o.other)); if (ot >= 2 && ot <= 10) s.other = ot;
     return s;
   }
@@ -114,7 +119,7 @@ var Store = (function (L) {
 
   return {
     MAXP: MAXP, MAXLEN: MAXLEN, HIST_LIMIT: HIST_LIMIT, DEF: DEF,
-    clean: clean, uid: uid, groupSize: groupSize, defaults: defaults, firstRun: firstRun,
+    clean: clean, uid: uid, groupSize: groupSize, leftover: leftover, defaults: defaults, firstRun: firstRun,
     cleanPlayers: cleanPlayers, cleanPairs: cleanPairs, cleanSettings: cleanSettings, migrateSettings: migrateSettings,
     trimHistory: trimHistory, sanitize: sanitize, parseExport: parseExport, exportText: exportText
   };
