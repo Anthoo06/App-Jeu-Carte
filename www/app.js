@@ -152,7 +152,7 @@
 
   function addNames(text) {
     var parts = String(text).split(/[,;\n]+/).map(function (x) { return clean(x); }).filter(Boolean);
-    var have = {}; state.players.forEach(function (p) { have[p.name.toLowerCase()] = 1; });
+    var have = Object.create(null); state.players.forEach(function (p) { have[p.name.toLowerCase()] = 1; });
     var added = 0, dups = [], full = false;
     parts.forEach(function (n) {
       var k = n.toLowerCase();
@@ -413,6 +413,12 @@
     var mq = matchMedia('(prefers-color-scheme: dark)');
     if (mq.addEventListener) mq.addEventListener('change', applyTheme);
   }
+
+  // Échap (sur ordinateur) : comme le bouton retour, ferme la fenêtre ou la page ouverte.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('#copySheet').hidden) $('#copySheet').hidden = true; else closeLayer();
+  });
 
   // Bouton retour d'Android : ferme la couche ouverte, sinon quitte l'appli.
   var Cap = window.Capacitor;

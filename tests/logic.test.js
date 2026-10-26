@@ -91,6 +91,13 @@ test('ancien réglage « Remplaçants » → case banc cochée', () => {
   assert.strictEqual(Store.leftover(Object.assign({}, v2, { bench: false })), 'bigger');
 });
 
+test('prénoms qui ressemblent à des propriétés internes de JavaScript', () => {
+  const names = ['Constructor', 'toString', 'valueOf', '__proto__', 'hasOwnProperty'];
+  const s = Store.sanitize({ v: 2, players: names.map(n => ({ name: n, present: true })), apart: [['Constructor', 'toString']] });
+  assert.deepStrictEqual(s.players.map(p => p.name), names);
+  assert.deepStrictEqual(s.apart, [['Constructor', 'toString']]);
+});
+
 test('historique limité à 50, favoris gardés', () => {
   const h = Array.from({ length: 60 }, (_, i) => ({ id: 'h' + i, fav: i === 59, groups: [['A', 'B']], bench: [] }));
   Store.trimHistory(h);

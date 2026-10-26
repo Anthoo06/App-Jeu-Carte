@@ -28,7 +28,7 @@ var Store = (function (L) {
 
   /* Joueurs uniques (sans tenir compte des majuscules). Accepte des prénoms seuls (v1) ou des { name, present }. */
   function cleanPlayers(arr) {
-    var seen = {}, out = [];
+    var seen = Object.create(null), out = [];   // sans prototype : « Constructor » ou « toString » sont des prénoms comme les autres
     (Array.isArray(arr) ? arr : []).forEach(function (x) {
       var n = clean(typeof x === 'string' ? x : (x && x.name));
       var k = n.toLowerCase();
@@ -37,7 +37,7 @@ var Store = (function (L) {
     return out;
   }
   function cleanPairs(arr, names) {
-    var ok = {}, seen = {}, out = [];
+    var ok = Object.create(null), seen = Object.create(null), out = [];
     names.forEach(function (n) { ok[n] = 1; });
     (Array.isArray(arr) ? arr : []).forEach(function (p) {
       if (!Array.isArray(p) || p.length < 2) return;

@@ -158,3 +158,12 @@ Fluidité :
 - Mesure à 60 images/s sur toute une séquence (9 joueurs, suspense) : aucune tâche longue sur le fil principal.
 
 Divers : APK verrouillé en portrait (tools/android-portrait.js), taille minimale de la grande carte sur écran court. Test de 1 200 appuis au hasard : aucune erreur.
+
+## Vérification sécurité (2026-10-26)
+
+- Injection : prénoms, noms de liste et imports piégés (balises, attributs, scripts) testés sur tous les affichages (pastilles, cartes, historique, contraintes, listes) : aucun code exécuté, tout est échappé.
+- Import : pas de pollution de prototype, valeurs inconnues ou absurdes rejetées, historique plafonné à 50, joueurs à 60, import de 5 Mo absorbé.
+- Bug corrigé : un prénom comme « Constructor », « toString » ou « valueOf » était refusé (tables de recherche sans prototype désormais).
+- Échap ferme la fenêtre ou la page ouverte (artefact sur ordinateur).
+- Dépendances : l'appli n'en embarque aucune vulnérable ; les alertes npm concernent seulement les outils de fabrication (générateur d'icônes) qui tournent sur nos propres fichiers.
+- Limites connues : la clé de signature de l'APK est publique dans le dépôt (pratique pour les mises à jour, mais n'importe qui pourrait signer un APK « compatible ») ; l'APK est une version de débogage.
