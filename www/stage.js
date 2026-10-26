@@ -15,7 +15,7 @@ function Scene(opts) {
   var el = opts.el;
   var center = el.querySelector('.stage-center'), hint = el.querySelector('.stage-hint');
   var tray = el.querySelector('.tray'), count = el.querySelector('.stage-count');
-  var doneBtn = el.querySelector('.stage-done'), skipBtn = el.querySelector('.stage-skip');
+  var endBox = el.querySelector('.stage-end'), doneBtn = el.querySelector('.stage-done'), skipBtn = el.querySelector('.stage-skip');
   var items = [], idx = 0, phase = 'idle', timers = [], card = null, nbGroups = 0;
 
   var ARRIVE_MS = 1500, SUSPENSE_MS = 2000, FLIP_MS = 700, STORE_MS = 650, GATHER_MS = 750;
@@ -53,9 +53,9 @@ function Scene(opts) {
   }
   function shownHint() { return idx < items.length - 1 ? 'Touche la carte pour passer à la suivante' : 'Touche la carte pour la ranger'; }
 
-  /* « Terminé » vit sous les cartes réunies à la fin ; on le remet à sa place avant de vider le centre. */
-  function parkDone() { if (doneBtn.parentNode !== el) el.insertBefore(doneBtn, tray); doneBtn.hidden = true; }
-  function clearCenter() { parkDone(); center.innerHTML = ''; }
+  /* Le bloc de fin (note, Copier, Garder, Terminé) vit sous les cartes réunies ; on le remet à sa place avant de vider le centre. */
+  function parkEnd() { if (endBox.parentNode !== el) el.insertBefore(endBox, tray); endBox.hidden = true; }
+  function clearCenter() { parkEnd(); center.innerHTML = ''; }
 
   /* Arrivée : minuscule au centre, la carte grandit en tournant de moins en moins vite, avec souffle et vibrations croissantes. */
   function arrive() {
@@ -140,15 +140,15 @@ function Scene(opts) {
     idx++;
     if (idx < items.length) arrive(); else finish();
   }
-  function finish() {
+  function finish(instant) {
     phase = 'done'; idx = items.length;
     count.textContent = 'Tous les groupes sont sortis';
     setHint('');
     skipBtn.hidden = true;
-    gather();
+    gather(instant);
   }
-  /* Fin : les cartes de la rangée glissent au centre ; « Terminé » se place juste en dessous. */
-  function gather() {
+  /* Fin : les cartes de la rangée glissent au centre ; le bloc de fin se place juste en dessous. */
+  function gather(instant) {
     var cards = Array.prototype.slice.call(tray.children);
     var before = cards.map(function (c) { return c.getBoundingClientRect(); });
     var wrap = document.createElement('div'), inner = document.createElement('div'), box = document.createElement('div');
@@ -156,13 +156,14 @@ function Scene(opts) {
     inner.className = 'finalinner';
     box.className = 'finalgrid' + (cards.length > 4 ? ' many' : '');
     inner.appendChild(box);
-    inner.appendChild(doneBtn);
+    inner.appendChild(endBox);
     wrap.appendChild(inner);
     center.innerHTML = '';
     center.appendChild(wrap);
     cards.forEach(function (c) { box.appendChild(c); });
     tray.hidden = true;
-    doneBtn.hidden = false;
+    endBox.hidden = false;
+    if (instant) return;
     cards.forEach(function (c, i) {
       var a = before[i], b = c.getBoundingClientRect();
       if (!a.width || !b.width) return;
@@ -171,7 +172,7 @@ function Scene(opts) {
         { transform: 'none', transformOrigin: '0 0' }
       ], { duration: GATHER_MS, delay: i * 55, easing: SMOOTH, fill: 'backwards' });
     });
-    doneBtn.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
+    endBox.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
       { duration: 400, delay: GATHER_MS * 0.6 + cards.length * 55, easing: SMOOTH, fill: 'backwards' });
   }
   /* « Tout révéler » : range directement tout ce qui reste. */
@@ -184,7 +185,7 @@ function Scene(opts) {
   }
 
   center.addEventListener('click', function (e) {
-    if (e.target.closest('.stage-done')) return;
+    if (e.target.closest('.stage-end')) return;
     if (phase === 'hidden') reveal();
     else if (phase === 'shown') store();
   });
@@ -210,7 +211,8 @@ function Scene(opts) {
   }, { passive: true });
 
   return {
-    start: function (draw) {
+    /* instant : sans animation, toutes les cartes s'affichent directement au centre. */
+    start: function (draw, instant) {
       clearTimers();
       nbGroups = draw.groups.length;
       items = draw.groups.map(function (g, i) { return { names: g, label: 'Groupe ' + (i + 1), color: opts.color(i), flowers: opts.flowers(i) }; });
@@ -219,6 +221,11 @@ function Scene(opts) {
       clearCenter();
       tray.innerHTML = ''; tray.scrollLeft = 0; tray.hidden = false;
       skipBtn.hidden = false;
+      if (instant) {
+        items.forEach(function (it) { tray.appendChild(trayCard(it)); });
+        finish(true);
+        return;
+      }
       arrive();
     },
     stop: function () {

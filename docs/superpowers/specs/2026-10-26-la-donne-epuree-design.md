@@ -133,3 +133,12 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 - Arrivée sonore : souffle qui monte pendant la rotation, puis petit « pop » à l'atterrissage. Bref frottement quand la carte se range.
 - Réglage « Fleurs sur les cartes » (activé par défaut) : 3 motifs (marguerites, cerisier, tulipes) de la couleur du groupe en fond de carte.
 - Texte centré (« Groupe X » et prénoms) dans toutes les cartes.
+
+## Réorganisation : écran épuré (2026-10-26)
+
+- Écran principal en deux blocs : « Joueurs » (ajout, pastilles, Tout effacer) et « Groupes » (Duos · Trios · Autre, aperçu, pastilles d'options « Éviter les paires vues » et « banc », ligne des contraintes). Le bouton « Tirer au sort » est collé en bas de l'écran.
+- Plus de résultat sur l'écran principal : le tirage s'affiche toujours dans la scène. Avec « Animation » coupée, la scène s'ouvre directement sur toutes les cartes réunies. Sous les cartes : la note éventuelle, puis Copier, ★ Garder (si l'historique est affiché) et Terminé.
+- Icône 📂 en haut : une seule fenêtre « Listes de joueurs » pour sauvegarder la liste actuelle (nom, puis Sauvegarder) et charger ou supprimer une liste.
+- Paramètres en trois blocs façon réglages du téléphone : Tirage (reste : Agrandir / Plus petit ; Mode suspense), Affichage et sons (Animation, Son, Vibration, Fleurs, Afficher l'historique, Thème Auto / Clair / Sombre), Plus (Contraintes ›, Sauvegarde ›, chacune sur sa propre page). « Tout réinitialiser » devient un lien discret en bas.
+- La navigation est une pile : Paramètres → Contraintes → retour ramène aux Paramètres.
+- Les messages courts s'affichent en haut de l'écran, pour ne pas masquer le bouton de tirage.

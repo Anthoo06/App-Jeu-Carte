@@ -4,8 +4,8 @@
   var KEY = 'la-donne:v2', OLD_KEY = 'la-donne:v1';
   var NB_COLORS = 8;
   /* Couches ouvertes par-dessus l'écran principal. Elles ne touchent pas à l'adresse de la page, qui peut être dans un cadre (artefact). */
-  var LAYERS = { reglages: 'v-settings', historique: 'v-history', sauver: 'dlg-sauver', charger: 'dlg-charger', tirage: 'stage' };
-  var PAGES = { reglages: 1, historique: 1 };
+  var LAYERS = { reglages: 'v-settings', contraintes: 'v-cons', sauvegarde: 'v-backup', historique: 'v-history', listes: 'dlg-listes', tirage: 'stage' };
+  var PAGES = { reglages: 1, contraintes: 1, sauvegarde: 1, historique: 1 };
 
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
@@ -13,8 +13,8 @@
   var clean = Store.clean;
 
   var storageOk = true;
-  var ui = { favOnly: false, down: [], layer: '', mainScroll: 0, listName: '' };
-  var drawing = false;
+  // stack : couches ouvertes, la dernière est visible (ex. Paramètres puis Contraintes).
+  var ui = { favOnly: false, stack: [], layer: '', mainScroll: 0, listName: '' };
   var pendingDraw = null;
 
   /* ----- Stockage ----- */
@@ -92,7 +92,7 @@
         '<button type="button" class="px" data-act="del" data-i="' + i + '" aria-label="Retirer ' + n + '">×</button></li>';
     }).join('') : '<li class="empty">Ajoute des prénoms ci-dessus.</li>';
     var n = presentNames().length, m = state.players.length;
-    $('#pcount').textContent = m ? n + ' présent' + (n > 1 ? 's' : '') + ' sur ' + m : '';
+    $('#pcount').textContent = m ? n + ' / ' + m + ' présent' + (n > 1 ? 's' : '') : '';
     $('.pfoot .link').hidden = !m;
     $('#exampleNote').hidden = !state.meta.example;
     renderDrawPanel();
@@ -119,56 +119,11 @@
     var nc = state.apart.length + state.together.length;
     var cl = $('#consLine');
     cl.hidden = !nc;
-    if (nc) cl.innerHTML = nc + ' contrainte' + (nc > 1 ? 's' : '') + ' active' + (nc > 1 ? 's' : '') + ' · <button type="button" class="link" data-act="open" data-layer="reglages">voir</button>';
+    if (nc) cl.innerHTML = nc + ' contrainte' + (nc > 1 ? 's' : '') + ' active' + (nc > 1 ? 's' : '') + ' · <button type="button" class="link" data-act="open" data-layer="contraintes">voir</button>';
     $('#histBtn').hidden = !s.showHistory;
   }
 
-  function cardHTML(names, i, down, interactive) {
-    var label = 'Groupe ' + (i + 1);
-    var front = '<div class="face front deco">' + flowerCorners(gFlowers(i)) + '<span class="glabel">' + label + '</span><span class="nms">' + names.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</span></div>';
-    var back = interactive ? '<div class="face back" aria-hidden="true">?</div>' : '';
-    var attrs = interactive
-      ? ' role="button" tabindex="0" data-act="flip" data-gi="' + i + '" aria-label="Retourner la carte du ' + label + '"'
-      : ' role="group" aria-label="' + label + ' : ' + esc(names.join(', ')) + '"';
-    return '<div class="flip' + (down ? ' down' : '') + '" style="--c:' + gColor(i) + ';--i:' + i + '"' + attrs + '>' + front + back + '</div>';
-  }
-  function renderResult(animate) {
-    var box = $('#result'), L = state.last;
-    if (!L) { box.innerHTML = ''; return; }
-    var anyDown = ui.down.some(Boolean);
-    var sizes = L.groups.map(function (g) { return g.length; });
-    var h = '<div class="reshead"><div><h2>Résultat</h2><p class="mono">' + esc(describeSizes(sizes, L.bench.length)) + '</p></div><div class="tools">' +
-      (anyDown ? '<button type="button" class="btn" data-act="reveal-all">Tout révéler</button>' : '') +
-      '<button type="button" class="btn" data-act="copy-last">Copier</button>' +
-      (state.settings.showHistory ? '<button type="button" class="btn" data-act="keep">★ Garder</button>' : '') +
-      '</div></div>';
-    if (L.violations) h += '<p class="note warn">Les contraintes « à séparer » sont trop serrées : ' + L.violations + ' paire' + (L.violations > 1 ? 's restent' : ' reste') + ' ensemble.</p>';
-    if (L.repeats) h += '<p class="note">' + L.repeats + ' paire' + (L.repeats > 1 ? 's' : '') + ' déjà vue' + (L.repeats > 1 ? 's' : '') + ' : il n\'y avait plus assez de nouvelles combinaisons.</p>';
-    h += '<div class="cards' + (animate && state.settings.anim && !reduced() ? ' dealing' : '') + '">';
-    L.groups.forEach(function (g, i) { h += cardHTML(g, i, !!ui.down[i], anyDown); });
-    if (L.bench.length) {
-      h += '<div class="flip bench" style="--i:' + L.groups.length + '" role="group" aria-label="Sur le banc"><div class="face front"><span class="glabel">Sur le banc</span><span class="nms">' +
-        L.bench.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</span></div></div>';
-    }
-    h += '</div>';
-    box.innerHTML = h;
-    if (animate && state.settings.anim && !reduced() && !anyDown) scramble();
-  }
-  /* Les prénoms défilent quelques instants avant de se fixer. */
-  function scramble() {
-    var els = $$('#result .flip:not(.bench) .nm'), finals = els.map(function (e) { return e.textContent; });
-    var pool = state.players.map(function (p) { return p.name; });
-    if (!els.length || pool.length < 2) return;
-    var t = 0; drawing = true;
-    var iv = setInterval(function () {
-      t++;
-      if (t >= 9) { clearInterval(iv); els.forEach(function (e, i) { e.textContent = finals[i]; }); drawing = false; return; }
-      els.forEach(function (e) { e.textContent = pool[Math.floor(Math.random() * pool.length)]; });
-    }, 80);
-  }
-
   function doDraw() {
-    if (drawing) return;
     var s = state.settings, err = $('#drawErr');
     err.textContent = '';
     var r = drawGroups(presentNames(), {
@@ -182,22 +137,17 @@
     state.last = { id: entry.id, ts: entry.ts, fav: false, groups: r.groups, bench: r.bench, violations: r.violations, repeats: r.repeats };
     state.history.unshift(entry);
     Store.trimHistory(state.history);
-    // Avec « Animation », les groupes sortent un par un dans la scène ; sinon tout s'affiche sous le bouton.
-    var staged = s.anim && !reduced();
-    ui.down = s.suspense && !staged ? r.groups.map(function () { return true; }) : [];
-    renderResult(!staged);
     save();
-    if (staged) {
-      if (s.sound) Son.unlock();
-      pendingDraw = state.last;
-      openLayer('tirage');
-      return;
-    }
-    buzz(25);
-    scrollToResult();
-  }
-  function scrollToResult() {
-    try { $('#result').scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); } catch (e) { /* ignoré */ }
+    // Le résultat s'affiche toujours dans la scène : groupe par groupe avec « Animation », sinon directement.
+    var L = state.last, notes = [];
+    if (L.violations) notes.push('Contraintes « à séparer » trop serrées : ' + L.violations + ' paire' + (L.violations > 1 ? 's restent' : ' reste') + ' ensemble.');
+    if (L.repeats) notes.push(L.repeats + ' paire' + (L.repeats > 1 ? 's' : '') + ' déjà vue' + (L.repeats > 1 ? 's' : '') + ' : plus assez de nouvelles combinaisons.');
+    $('.stage-note').textContent = notes.join(' ');
+    $('.stage-end .keep').hidden = !s.showHistory;
+    if (s.sound) Son.unlock();
+    pendingDraw = { draw: L, instant: !s.anim || reduced() };
+    if (pendingDraw.instant) buzz(25);
+    openLayer('tirage');
   }
 
   function addNames(text) {
@@ -218,12 +168,12 @@
     return added;
   }
 
-  /* ----- Fenêtres Sauvegarder / Charger ----- */
-  function renderLoad() {
+  /* ----- Fenêtre Listes : sauvegarder la liste actuelle, charger une liste ----- */
+  function renderLists() {
     $('#lists').innerHTML = state.lists.length ? state.lists.map(function (l) {
       return '<li class="row pick"><button type="button" class="load" data-act="list-load" data-id="' + esc(l.id) + '"><span>' + esc(l.name) + '</span><span class="mono">' + l.players.length + ' joueurs</span></button>' +
         '<button type="button" class="x" data-act="list-del" data-confirm data-id="' + esc(l.id) + '" aria-label="Supprimer la liste ' + esc(l.name) + '">🗑</button></li>';
-    }).join('') : '<li class="empty">Aucune liste sauvegardée. Utilise « 💾 Sauvegarder » sur l\'écran principal.</li>';
+    }).join('') : '<li class="empty">Aucune liste pour l\'instant : donne un nom à la liste actuelle et sauvegarde-la.</li>';
   }
   function saveList() {
     var nm = clean($('#saveName').value, 40), msg = $('#saveMsg');
@@ -238,8 +188,9 @@
       toast('« ' + nm + ' » sauvegardée');
     }
     ui.listName = nm;
+    msg.textContent = '';
     save();
-    closeLayer();
+    renderLists();
   }
 
   /* ----- Paramètres ----- */
@@ -259,11 +210,13 @@
     $('#togList').innerHTML = rows(state.together, 'together');
   }
   function renderSettings() {
-    $$('#v-settings [data-set]').forEach(function (el) {
-      var v = state.settings[el.dataset.set];
-      if (el.type === 'checkbox') el.checked = !!v; else el.value = String(v);
-    });
-    renderCons();
+    var s = state.settings;
+    $$('#v-settings [data-set]').forEach(function (el) { el.checked = !!s[el.dataset.set]; });
+    $$('#v-settings [data-act="set"]').forEach(function (b) { b.setAttribute('aria-pressed', String(String(s[b.dataset.k]) === b.dataset.v)); });
+    var nc = state.apart.length + state.together.length;
+    $('#consCount').textContent = nc ? nc + ' active' + (nc > 1 ? 's' : '') : 'aucune';
+  }
+  function renderBackup() {
     $('#exportBox').value = Store.exportText(state);
     $('#storageWarn').hidden = storageOk;
   }
@@ -273,12 +226,11 @@
     if (!inc) { msg.textContent = 'Ce texte n\'est pas une sauvegarde de La Donne : colle le texte exporté complet, sans rien ajouter.'; return; }
     msg.textContent = '';
     state = inc;
-    ui.down = [];
     ui.listName = '';
     $('#importBox').value = '';
     save();
     applyTheme();
-    closeLayer();
+    closeAll();
     renderMain();
     toast('Import terminé : vérifie les réglages, puis tire au sort');
   }
@@ -311,34 +263,35 @@
     var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#111317' : '#FAF8F3';
   }
 
-  /* ----- Navigation entre les couches ----- */
-  function openLayer(name) { if (LAYERS[name] && ui.layer !== name) route(name); }
-  function closeLayer() { if (ui.layer) route(''); }
-  function route(layer) {
-    var prev = ui.layer;
+  /* ----- Navigation entre les couches (pile) ----- */
+  function openLayer(name) { if (LAYERS[name] && ui.layer !== name) { ui.stack.push(name); route(); } }
+  function closeLayer() { if (ui.stack.length) { ui.stack.pop(); route(); } }
+  function closeAll() { if (ui.stack.length) { ui.stack = []; route(); } }
+  function route() {
+    var prev = ui.layer, layer = ui.stack[ui.stack.length - 1] || '';
     if (!PAGES[prev] && PAGES[layer]) ui.mainScroll = window.scrollY;
     ui.layer = layer;
     Object.keys(LAYERS).forEach(function (k) { $('#' + LAYERS[k]).hidden = k !== layer; });
     $('#v-main').hidden = !!PAGES[layer];
     if (layer === 'reglages') renderSettings();
+    if (layer === 'contraintes') renderCons();
+    if (layer === 'sauvegarde') renderBackup();
     if (layer === 'historique') renderHistory();
-    if (layer === 'charger') renderLoad();
-    if (layer === 'sauver') {
+    if (layer === 'listes') {
+      renderLists();
       $('#saveName').value = ui.listName; $('#saveMsg').textContent = '';
-      setTimeout(function () { $('#saveName').focus(); $('#saveName').select(); }, 50);
     }
     if (layer === 'tirage') {
-      if (!pendingDraw) { route(''); return; }
+      if (!pendingDraw) { closeLayer(); return; }
       document.body.style.overflow = 'hidden';
-      scene.start(pendingDraw); pendingDraw = null;
+      scene.start(pendingDraw.draw, pendingDraw.instant); pendingDraw = null;
     }
     if (prev === 'tirage' && layer !== 'tirage') {
       scene.stop();
       document.body.style.overflow = '';
-      scrollToResult();
     }
-    if (PAGES[layer]) window.scrollTo(0, 0);
-    else if (PAGES[prev]) { renderMain(); window.scrollTo(0, ui.mainScroll); }
+    if (PAGES[layer] && layer !== prev) window.scrollTo(0, 0);
+    else if (!layer && PAGES[prev]) { renderMain(); window.scrollTo(0, ui.mainScroll); }
   }
 
   var scene = Scene({
@@ -346,7 +299,7 @@
     settings: function () { return state.settings; },
     onDone: function () { closeLayer(); }
   });
-  function renderMain() { renderPlayers(); renderResult(false); }
+  function renderMain() { renderPlayers(); }
 
   /* ----- Actions ----- */
   function act(btn) {
@@ -365,10 +318,11 @@
         save(); renderPlayers(); $('#nameInput').focus(); break;
       case 'pick': s.pick = Number(d.v); save(); renderDrawPanel(); if (s.pick === 0) $('#otherInput').focus(); break;
       case 'draw': doDraw(); break;
-      case 'flip': flip(btn); break;
-      case 'reveal-all':
-        $$('#result .flip.down').forEach(function (el, i) { el.style.transitionDelay = (i * 90) + 'ms'; el.classList.remove('down'); });
-        ui.down = []; btn.remove(); buzz(15); break;
+      case 'set':
+        var o = {}; o[d.k] = d.v;
+        state.settings = Store.cleanSettings(Object.assign({}, s, o));
+        if (d.k === 'theme') applyTheme();
+        save(); renderSettings(); renderDrawPanel(); break;
       case 'copy-last': if (state.last) copyText(drawText(state.last), 'Tirage copié'); break;
       case 'keep':
         if (!state.last) break;
@@ -380,7 +334,7 @@
         state.players = l.players.map(function (x) { return { name: x.name, present: x.present }; });
         state.meta.example = false; ui.listName = l.name;
         pruneConstraints(); save(); closeLayer(); renderPlayers(); toast('« ' + l.name + ' » chargée'); break;
-      case 'list-del': state.lists = state.lists.filter(function (x) { return x.id !== d.id; }); save(); renderLoad(); break;
+      case 'list-del': state.lists = state.lists.filter(function (x) { return x.id !== d.id; }); save(); renderLists(); break;
       case 'cons-add':
         var kind = d.kind, A = kind === 'apart' ? '#apartA' : '#togA', B = kind === 'apart' ? '#apartB' : '#togB';
         var x1 = $(A).value, x2 = $(B).value, cm = $('#consMsg');
@@ -400,21 +354,11 @@
       case 'export-copy': copyText($('#exportBox').value, 'Sauvegarde copiée'); break;
       case 'import': importState(); break;
       case 'reset-all':
-        state = Store.defaults(); ui.down = []; ui.favOnly = false; ui.listName = '';
+        state = Store.defaults(); ui.favOnly = false; ui.listName = '';
         save(); applyTheme(); renderSettings(); toast('Tout est remis à zéro'); break;
       case 'copy-close': $('#copySheet').hidden = true; break;
     }
   }
-  function flip(el) {
-    var i = Number(el.dataset.gi);
-    el.style.transitionDelay = '0ms';
-    var nowDown = !el.classList.contains('down');
-    el.classList.toggle('down', nowDown);
-    ui.down[i] = nowDown;
-    buzz(10);
-    if (!ui.down.some(Boolean)) { ui.down = []; var ra = $('[data-act="reveal-all"]'); if (ra) ra.remove(); }
-  }
-
   /* ----- Événements ----- */
   // Les actions qui effacent demandent un second appui (« Confirmer ? ») dans les 3 secondes.
   function disarm(b) { if (!b.dataset.armed) return; delete b.dataset.armed; b.textContent = b.dataset.label; b.classList.remove('armed'); }
@@ -430,16 +374,12 @@
     }
     act(btn);
   });
-  document.addEventListener('keydown', function (e) {
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.flip[role="button"]')) { e.preventDefault(); flip(e.target); }
-  });
   document.addEventListener('change', function (e) {
     var el = e.target; if (!el.dataset || !el.dataset.set) return;
     var k = el.dataset.set, o = {};
     o[k] = el.type === 'checkbox' ? el.checked : el.value;
     state.settings = Store.cleanSettings(Object.assign({}, state.settings, o));
-    if (k === 'theme' || k === 'decor') applyTheme();
-    if (k === 'suspense') ui.down = [];
+    if (k === 'decor') applyTheme();
     save();
     renderDrawPanel();
   });

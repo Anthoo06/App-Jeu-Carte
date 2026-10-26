@@ -11,12 +11,15 @@
 <body>
 
 <!-- ÉCRAN PRINCIPAL -->
-<div id="v-main" class="view">
+<div id="v-main" class="view main">
   <header class="top">
     <h1 class="brand"><span aria-hidden="true">♠</span> La Donne</h1>
     <div class="topbtns">
       <button type="button" class="icon" id="histBtn" data-act="open" data-layer="historique" aria-label="Historique" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </button>
+      <button type="button" class="icon" data-act="open" data-layer="listes" aria-label="Listes de joueurs">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       </button>
       <button type="button" class="icon" data-act="open" data-layer="reglages" aria-label="Paramètres">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -24,26 +27,21 @@
     </div>
   </header>
 
-  <section class="block" aria-label="Joueurs">
+  <section class="card-block" aria-labelledby="hPlayers">
+    <div class="bhead"><h2 id="hPlayers">Joueurs</h2><span id="pcount" class="count"></span></div>
     <div class="addrow">
       <label class="sr" for="nameInput">Prénoms à ajouter</label>
       <input id="nameInput" type="text" enterkeyhint="done" placeholder="Prénom, Prénom…" maxlength="600" autocapitalize="words" autocomplete="off" spellcheck="false">
       <button class="btn add" type="button" data-act="add" aria-label="Ajouter">+</button>
     </div>
     <p id="addMsg" class="hint" aria-live="polite"></p>
-    <p id="exampleNote" class="hint" hidden>Ces prénoms sont des exemples : touche « Tout effacer » pour repartir de zéro.</p>
+    <p id="exampleNote" class="hint" hidden>Prénoms d'exemple : « Tout effacer » pour repartir de zéro.</p>
     <ul id="pills" class="pills"></ul>
-    <div class="pfoot">
-      <span id="pcount" class="mono"></span>
-      <button type="button" class="link" data-act="clear" data-confirm>Tout effacer</button>
-    </div>
-    <div class="row2">
-      <button type="button" class="btn" data-act="open" data-layer="sauver">💾 Sauvegarder</button>
-      <button type="button" class="btn" data-act="open" data-layer="charger">📂 Charger</button>
-    </div>
+    <div class="pfoot"><button type="button" class="link" data-act="clear" data-confirm>Tout effacer</button></div>
   </section>
 
-  <section class="block" aria-label="Tirage">
+  <section class="card-block" aria-labelledby="hGroups">
+    <div class="bhead"><h2 id="hGroups">Groupes</h2></div>
     <div class="seg" role="group" aria-label="Taille des groupes">
       <button type="button" data-act="pick" data-v="2">Duos</button>
       <button type="button" data-act="pick" data-v="3">Trios</button>
@@ -53,15 +51,18 @@
       <span>Joueurs par groupe</span>
       <input id="otherInput" type="number" inputmode="numeric" min="2" max="10" step="1">
     </label>
-    <label class="check"><input type="checkbox" id="avoid" data-set="avoid"><span class="box" aria-hidden="true"></span><span>Éviter les paires déjà vues</span></label>
     <p id="preview" class="preview"></p>
-    <label id="benchRow" class="check" hidden><input type="checkbox" id="bench" data-set="bench"><span class="box" aria-hidden="true"></span><span id="benchLbl"></span></label>
-    <p id="consLine" class="hint" hidden></p>
-    <button id="drawBtn" type="button" class="btn primary" data-act="draw">Tirer au sort</button>
-    <p id="drawErr" class="err" role="alert"></p>
+    <div class="chips">
+      <label class="chip"><input type="checkbox" id="avoid" data-set="avoid"><span>Éviter les paires vues</span></label>
+      <label id="benchRow" class="chip" hidden><input type="checkbox" id="bench" data-set="bench"><span id="benchLbl"></span></label>
+    </div>
+    <p id="consLine" class="hint center" hidden></p>
   </section>
 
-  <section id="result" aria-live="polite"></section>
+  <div class="drawbar">
+    <p id="drawErr" class="err" role="alert"></p>
+    <button id="drawBtn" type="button" class="btn primary" data-act="draw">Tirer au sort</button>
+  </div>
 </div>
 
 <!-- PARAMÈTRES -->
@@ -72,79 +73,93 @@
     <span class="icon-space"></span>
   </header>
 
-  <section class="block">
-    <h2>Tirage</h2>
-    <label class="field"><span>Si le compte n'est pas rond (sans banc)</span>
-      <select id="s-leftover" data-set="leftover">
-        <option value="bigger">Agrandir des groupes</option>
-        <option value="smaller">Un groupe plus petit</option>
-      </select>
-    </label>
-    <label class="switch"><input type="checkbox" data-set="suspense"><span class="track"></span><span class="lbl">Mode suspense<small>Les cartes arrivent face cachée, tu les retournes une par une.</small></span></label>
-  </section>
+  <h2 class="gtitle">Tirage</h2>
+  <div class="group">
+    <div class="srow stack">
+      <span>Si le compte n'est pas rond</span>
+      <div class="seg small" role="group" aria-label="Si le compte n'est pas rond">
+        <button type="button" data-act="set" data-k="leftover" data-v="bigger">Agrandir</button>
+        <button type="button" data-act="set" data-k="leftover" data-v="smaller">Plus petit</button>
+      </div>
+    </div>
+    <label class="srow switch"><span class="lbl">Mode suspense</span><input type="checkbox" data-set="suspense"><span class="track"></span></label>
+  </div>
 
-  <section class="block">
-    <h2>Contraintes</h2>
-    <h3>À séparer</h3>
-    <p class="hint">Jamais dans le même groupe.</p>
+  <h2 class="gtitle">Affichage et sons</h2>
+  <div class="group">
+    <label class="srow switch"><span class="lbl">Animation</span><input type="checkbox" data-set="anim"><span class="track"></span></label>
+    <label class="srow switch"><span class="lbl">Son</span><input type="checkbox" data-set="sound"><span class="track"></span></label>
+    <label class="srow switch"><span class="lbl">Vibration</span><input type="checkbox" data-set="vibrate"><span class="track"></span></label>
+    <label class="srow switch"><span class="lbl">Fleurs sur les cartes</span><input type="checkbox" data-set="decor"><span class="track"></span></label>
+    <label class="srow switch"><span class="lbl">Afficher l'historique</span><input type="checkbox" data-set="showHistory"><span class="track"></span></label>
+    <div class="srow stack">
+      <span>Thème</span>
+      <div class="seg small" role="group" aria-label="Thème">
+        <button type="button" data-act="set" data-k="theme" data-v="auto">Auto</button>
+        <button type="button" data-act="set" data-k="theme" data-v="light">Clair</button>
+        <button type="button" data-act="set" data-k="theme" data-v="dark">Sombre</button>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="gtitle">Plus</h2>
+  <div class="group">
+    <button type="button" class="srow nav" data-act="open" data-layer="contraintes"><span class="lbl">Contraintes</span><span id="consCount" class="mono"></span><span class="chev" aria-hidden="true">›</span></button>
+    <button type="button" class="srow nav" data-act="open" data-layer="sauvegarde"><span class="lbl">Sauvegarde</span><span class="mono">exporter · importer</span><span class="chev" aria-hidden="true">›</span></button>
+  </div>
+
+  <div class="reset"><button type="button" class="link danger" data-act="reset-all" data-confirm>Tout réinitialiser</button></div>
+</div>
+
+<!-- CONTRAINTES -->
+<div id="v-cons" class="view" hidden>
+  <header class="top">
+    <button type="button" class="icon" data-act="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1 class="title">Contraintes</h1>
+    <span class="icon-space"></span>
+  </header>
+  <h2 class="gtitle">À séparer <small>jamais dans le même groupe</small></h2>
+  <div class="group pad">
     <div class="pairrow">
       <select id="apartA" aria-label="Premier joueur à séparer"></select>
       <select id="apartB" aria-label="Second joueur à séparer"></select>
       <button type="button" class="btn" data-act="cons-add" data-kind="apart">Ajouter</button>
     </div>
     <ul id="apartList" class="rows"></ul>
-    <h3>À réunir</h3>
-    <p class="hint">Toujours dans le même groupe.</p>
+  </div>
+  <h2 class="gtitle">À réunir <small>toujours dans le même groupe</small></h2>
+  <div class="group pad">
     <div class="pairrow">
       <select id="togA" aria-label="Premier joueur à réunir"></select>
       <select id="togB" aria-label="Second joueur à réunir"></select>
       <button type="button" class="btn" data-act="cons-add" data-kind="together">Ajouter</button>
     </div>
     <ul id="togList" class="rows"></ul>
-    <p id="consMsg" class="hint" aria-live="polite"></p>
-  </section>
+  </div>
+  <p id="consMsg" class="hint center" aria-live="polite"></p>
+</div>
 
-  <section class="block">
-    <h2>Historique</h2>
-    <label class="switch"><input type="checkbox" data-set="showHistory"><span class="track"></span><span class="lbl">Afficher l'historique<small>Ajoute le bouton 🕘 en haut de l'écran et « ★ Garder » sous le résultat.</small></span></label>
-  </section>
-
-  <section class="block">
-    <h2>Ambiance</h2>
-    <label class="switch"><input type="checkbox" data-set="anim"><span class="track"></span><span class="lbl">Animation<small>Les cartes arrivent une par une au centre de l'écran.</small></span></label>
-    <label class="switch"><input type="checkbox" data-set="sound"><span class="track"></span><span class="lbl">Son<small>Musique du mode suspense.</small></span></label>
-    <label class="switch"><input type="checkbox" data-set="decor"><span class="track"></span><span class="lbl">Fleurs sur les cartes<small>Petites fleurs de la couleur du groupe en fond de carte.</small></span></label>
-    <label class="switch"><input type="checkbox" data-set="vibrate"><span class="track"></span><span class="lbl">Vibration</span></label>
-    <label class="field"><span>Thème</span>
-      <select id="s-theme" data-set="theme">
-        <option value="auto">Automatique</option>
-        <option value="light">Clair</option>
-        <option value="dark">Sombre</option>
-      </select>
-    </label>
-  </section>
-
-  <section class="block">
-    <h2>Sauvegarde</h2>
-    <h3>Exporter</h3>
-    <p class="hint">Tout ce qui est dans l'appli (joueurs, listes, contraintes, historique, réglages), sous forme de texte.</p>
+<!-- SAUVEGARDE -->
+<div id="v-backup" class="view" hidden>
+  <header class="top">
+    <button type="button" class="icon" data-act="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1 class="title">Sauvegarde</h1>
+    <span class="icon-space"></span>
+  </header>
+  <h2 class="gtitle">Exporter <small>tout, réglages compris</small></h2>
+  <div class="group pad">
     <label class="sr" for="exportBox">Texte de la sauvegarde</label>
     <textarea id="exportBox" readonly></textarea>
     <button type="button" class="btn" data-act="export-copy">Copier</button>
-    <h3>Importer</h3>
-    <p class="hint">Colle un texte exporté. Il remplace tout, réglages compris. Aucun tirage n'est lancé.</p>
+  </div>
+  <h2 class="gtitle">Importer <small>remplace tout, sans lancer de tirage</small></h2>
+  <div class="group pad">
     <label class="sr" for="importBox">Texte à importer</label>
-    <textarea id="importBox" placeholder="Colle ici le texte de la sauvegarde"></textarea>
+    <textarea id="importBox" placeholder="Colle ici le texte exporté"></textarea>
     <button type="button" class="btn" data-act="import" data-confirm>Importer</button>
     <p id="importMsg" class="err" aria-live="polite"></p>
-    <p id="storageWarn" class="err" hidden>Le stockage est bloqué sur cet appareil : rien ne sera gardé après fermeture. Utilise l'export.</p>
-  </section>
-
-  <section class="block">
-    <h2>Zone sensible</h2>
-    <button type="button" class="btn danger" data-act="reset-all" data-confirm>Tout réinitialiser</button>
-    <p class="hint">Efface joueurs, listes, contraintes, historique et réglages.</p>
-  </section>
+  </div>
+  <p id="storageWarn" class="err" hidden>Le stockage est bloqué sur cet appareil : rien ne sera gardé après fermeture. Utilise l'export.</p>
 </div>
 
 <!-- HISTORIQUE -->
@@ -165,30 +180,22 @@
   </details>
 </div>
 
-<!-- FENÊTRE SAUVEGARDER -->
-<div id="dlg-sauver" class="sheet" hidden>
-  <div class="sheetbox" role="dialog" aria-labelledby="saveTitle">
-    <h2 id="saveTitle">Sauvegarder la liste</h2>
-    <label class="sr" for="saveName">Nom de la liste</label>
-    <input id="saveName" type="text" maxlength="40" placeholder="Nom (ex. Soirée tarot)" enterkeyhint="done">
-    <p id="saveMsg" class="hint"></p>
-    <div class="row2">
-      <button type="button" class="btn" data-act="back">Annuler</button>
-      <button type="button" class="btn primary" data-act="save-list">Enregistrer</button>
+<!-- FENÊTRE LISTES (sauvegarder / charger) -->
+<div id="dlg-listes" class="sheet" hidden>
+  <div class="sheetbox" role="dialog" aria-labelledby="listsTitle">
+    <h2 id="listsTitle">Listes de joueurs</h2>
+    <div class="addrow">
+      <label class="sr" for="saveName">Nom de la liste</label>
+      <input id="saveName" type="text" maxlength="40" placeholder="Nom de la liste actuelle" enterkeyhint="done">
+      <button type="button" class="btn primary" data-act="save-list">Sauvegarder</button>
     </div>
-  </div>
-</div>
-
-<!-- FENÊTRE CHARGER -->
-<div id="dlg-charger" class="sheet" hidden>
-  <div class="sheetbox" role="dialog" aria-labelledby="loadTitle">
-    <h2 id="loadTitle">Charger une liste</h2>
+    <p id="saveMsg" class="hint"></p>
     <ul id="lists" class="rows"></ul>
     <button type="button" class="btn" data-act="back">Fermer</button>
   </div>
 </div>
 
-<!-- SCÈNE DE TIRAGE (avec « Animation ») -->
+<!-- SCÈNE DE TIRAGE -->
 <div id="stage" class="stage" hidden role="dialog" aria-label="Tirage">
   <div class="stage-top">
     <span class="stage-count mono"></span>
@@ -196,7 +203,14 @@
   </div>
   <div class="stage-center"></div>
   <p class="stage-hint" aria-live="polite"></p>
-  <button type="button" class="btn primary stage-done" hidden>Terminé</button>
+  <div class="stage-end" hidden>
+    <p class="stage-note"></p>
+    <div class="stage-actions">
+      <button type="button" class="btn" data-act="copy-last">Copier</button>
+      <button type="button" class="btn keep" data-act="keep">★ Garder</button>
+    </div>
+    <button type="button" class="btn primary stage-done">Terminé</button>
+  </div>
   <div class="tray" aria-label="Groupes sortis"></div>
 </div>
 
