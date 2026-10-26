@@ -63,6 +63,7 @@
     return t;
   }
   function gColor(i) { return 'var(--g' + (i % NB_COLORS) + ')'; }
+  function gFlowers(i) { return 'var(--fl' + (i % 3) + ')'; }
   function presentNames() { return state.players.filter(function (p) { return p.present; }).map(function (p) { return p.name; }); }
   function copyText(text, okMsg) {
     function fallback() { var t = $('#copyText'); t.value = text; $('#copySheet').hidden = false; t.focus(); t.select(); }
@@ -124,12 +125,12 @@
 
   function cardHTML(names, i, down, interactive) {
     var label = 'Groupe ' + (i + 1);
-    var front = '<div class="face front"><span class="glabel">' + label + '</span>' + names.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</div>';
+    var front = '<div class="face front deco"><span class="glabel">' + label + '</span><span class="nms">' + names.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</span></div>';
     var back = interactive ? '<div class="face back" aria-hidden="true">?</div>' : '';
     var attrs = interactive
       ? ' role="button" tabindex="0" data-act="flip" data-gi="' + i + '" aria-label="Retourner la carte du ' + label + '"'
       : ' role="group" aria-label="' + label + ' : ' + esc(names.join(', ')) + '"';
-    return '<div class="flip' + (down ? ' down' : '') + '" style="--c:' + gColor(i) + ';--i:' + i + '"' + attrs + '>' + front + back + '</div>';
+    return '<div class="flip' + (down ? ' down' : '') + '" style="--c:' + gColor(i) + ';--fl:' + gFlowers(i) + ';--i:' + i + '"' + attrs + '>' + front + back + '</div>';
   }
   function renderResult(animate) {
     var box = $('#result'), L = state.last;
@@ -146,8 +147,8 @@
     h += '<div class="cards' + (animate && state.settings.anim && !reduced() ? ' dealing' : '') + '">';
     L.groups.forEach(function (g, i) { h += cardHTML(g, i, !!ui.down[i], anyDown); });
     if (L.bench.length) {
-      h += '<div class="flip bench" style="--i:' + L.groups.length + '" role="group" aria-label="Sur le banc"><div class="face front"><span class="glabel">Sur le banc</span>' +
-        L.bench.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</div></div>';
+      h += '<div class="flip bench" style="--i:' + L.groups.length + '" role="group" aria-label="Sur le banc"><div class="face front"><span class="glabel">Sur le banc</span><span class="nms">' +
+        L.bench.map(function (n) { return '<span class="nm">' + esc(n) + '</span>'; }).join('') + '</span></div></div>';
     }
     h += '</div>';
     box.innerHTML = h;
@@ -305,6 +306,7 @@
   function applyTheme() {
     var t = state.settings.theme, r = document.documentElement;
     if (t === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', t);
+    r.classList.toggle('decor', !!state.settings.decor);
     var dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#111317' : '#FAF8F3';
   }
@@ -340,7 +342,7 @@
   }
 
   var scene = Scene({
-    el: $('#stage'), esc: esc, color: gColor, haptic: haptic, sound: Son,
+    el: $('#stage'), esc: esc, color: gColor, flowers: gFlowers, haptic: haptic, sound: Son,
     settings: function () { return state.settings; },
     onDone: function () { closeLayer(); }
   });
@@ -436,7 +438,7 @@
     var k = el.dataset.set, o = {};
     o[k] = el.type === 'checkbox' ? el.checked : el.value;
     state.settings = Store.cleanSettings(Object.assign({}, state.settings, o));
-    if (k === 'theme') applyTheme();
+    if (k === 'theme' || k === 'decor') applyTheme();
     if (k === 'suspense') ui.down = [];
     save();
     renderDrawPanel();

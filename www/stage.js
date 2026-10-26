@@ -1,4 +1,5 @@
-/* Scène de tirage : chaque groupe arrive au centre en tournant, se révèle, puis se range dans la rangée du bas.
+/* Scène de tirage : chaque groupe arrive au centre en tournant, se révèle, puis glisse dans la rangée du bas.
+   À la fin, toutes les cartes se réunissent au centre, avec « Terminé » juste en dessous.
    opts : el (conteneur), color(i), esc(s), haptic(niveau 1..3), settings() → réglages, sound (Son), onDone(). */
 function Scene(opts) {
   'use strict';
@@ -6,28 +7,32 @@ function Scene(opts) {
   var center = el.querySelector('.stage-center'), hint = el.querySelector('.stage-hint');
   var tray = el.querySelector('.tray'), count = el.querySelector('.stage-count');
   var doneBtn = el.querySelector('.stage-done'), skipBtn = el.querySelector('.stage-skip');
-  var items = [], idx = 0, phase = 'idle', timers = [], card = null;
+  var items = [], idx = 0, phase = 'idle', timers = [], card = null, nbGroups = 0;
 
-  var ARRIVE_MS = 1300, SUSPENSE_MS = 2000, FLIP_MS = 600, STORE_MS = 450;
+  var ARRIVE_MS = 1500, SUSPENSE_MS = 2000, FLIP_MS = 700, STORE_MS = 650, GATHER_MS = 750;
+  var SMOOTH = 'cubic-bezier(.22,.8,.24,1)';
 
   function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
   function faceHTML(it) {
-    return '<span class="glabel">' + it.label + '</span>' + it.names.map(function (n) { return '<span class="nm">' + opts.esc(n) + '</span>'; }).join('');
+    return '<span class="glabel">' + it.label + '</span><span class="nms">' +
+      it.names.map(function (n) { return '<span class="nm">' + opts.esc(n) + '</span>'; }).join('') + '</span>';
   }
   function bigCard(it, down) {
     var w = document.createElement('div');
     w.className = 'scard' + (it.bench ? ' bench' : '');
     w.style.setProperty('--c', it.color);
-    w.innerHTML = '<div class="sflip' + (down ? ' down' : '') + '"><div class="sface sfront">' + faceHTML(it) + '</div>' +
+    w.style.setProperty('--fl', it.flowers);
+    w.innerHTML = '<div class="sflip' + (down ? ' down' : '') + '"><div class="sface sfront deco">' + faceHTML(it) + '</div>' +
       '<div class="sface sback" aria-hidden="true">?</div></div>';
     return w;
   }
   function trayCard(it) {
     var t = document.createElement('div');
-    t.className = 'tcard' + (it.bench ? ' bench' : '');
+    t.className = 'tcard deco' + (it.bench ? ' bench' : '');
     t.style.setProperty('--c', it.color);
+    t.style.setProperty('--fl', it.flowers);
     t.setAttribute('role', 'group');
     t.setAttribute('aria-label', it.label + ' : ' + it.names.join(', '));
     t.innerHTML = faceHTML(it);
@@ -39,69 +44,86 @@ function Scene(opts) {
     var it = items[idx];
     count.textContent = it ? (it.bench ? 'Sur le banc' : 'Groupe ' + (idx + 1) + ' / ' + nbGroups) : '';
   }
-  var nbGroups = 0;
+  function shownHint() { return idx < items.length - 1 ? 'Touche la carte pour passer à la suivante' : 'Touche la carte pour la ranger'; }
 
-  /* Arrivée : minuscule au centre, la carte grandit en tournant ; les vibrations s'intensifient. */
+  /* « Terminé » vit sous les cartes réunies à la fin ; on le remet à sa place avant de vider le centre. */
+  function parkDone() { if (doneBtn.parentNode !== el) el.insertBefore(doneBtn, tray); doneBtn.hidden = true; }
+  function clearCenter() { parkDone(); center.innerHTML = ''; }
+
+  /* Arrivée : minuscule au centre, la carte grandit en tournant de moins en moins vite, avec souffle et vibrations croissantes. */
   function arrive() {
     var it = items[idx], s = opts.settings();
     var down = s.suspense && !it.bench;
     card = bigCard(it, down);
-    center.innerHTML = '';
+    clearCenter();
     center.appendChild(card);
     phase = 'arriving';
     setCount(); setHint('');
     card.animate([
-      { transform: 'scale(.06) rotate(-900deg)' },
-      { transform: 'scale(1.06) rotate(8deg)', offset: 0.85 },
+      { transform: 'scale(.05) rotate(-720deg)' },
+      { transform: 'scale(.55) rotate(-200deg)', offset: 0.45 },
+      { transform: 'scale(1.05) rotate(6deg)', offset: 0.86 },
       { transform: 'scale(1) rotate(0deg)' }
-    ], { duration: ARRIVE_MS, easing: 'cubic-bezier(.25,.6,.3,1)' });
-    // Pulsations de plus en plus rapprochées et fortes.
-    var t = 0, gap = 260;
-    while (t < ARRIVE_MS - 60) {
+    ], { duration: ARRIVE_MS, easing: 'cubic-bezier(.3,.55,.35,1)' });
+    if (s.sound) opts.sound.arrive(ARRIVE_MS / 1000);
+    var t = 0, gap = 280;
+    while (t < ARRIVE_MS - 80) {
       (function (tt) { later(function () { opts.haptic(tt < ARRIVE_MS * 0.45 ? 1 : tt < ARRIVE_MS * 0.8 ? 2 : 3); }, tt); })(t);
-      t += gap; gap = Math.max(45, gap * 0.78);
+      t += gap; gap = Math.max(45, gap * 0.8);
     }
     later(function () {
       opts.haptic(3);
       phase = down ? 'hidden' : 'shown';
-      setHint(down ? 'Touche la carte pour la retourner' : (idx < items.length - 1 ? 'Touche la carte pour passer à la suivante' : 'Touche la carte pour la ranger'));
+      setHint(down ? 'Touche la carte pour la retourner' : shownHint());
     }, ARRIVE_MS);
   }
 
-  /* Suspense : musique et vibrations pendant 2 s, puis la carte se retourne. */
+  /* Tremblement du suspense : de plus en plus ample, calculé image par image pour rester fluide. */
+  function shakeFrames(ms) {
+    var frames = [], n = Math.round(ms / 16);
+    for (var i = 0; i <= n; i++) {
+      var p = i / n, amp = 0.6 + 3.4 * p * p, w = Math.sin(i * 0.9) * amp;
+      frames.push({ transform: 'rotate(' + w.toFixed(2) + 'deg) scale(' + (1 + 0.05 * p).toFixed(3) + ')' });
+    }
+    frames[n] = { transform: 'rotate(0deg) scale(1.05)' };
+    return frames;
+  }
+
+  /* Suspense : musique, tremblement et vibrations pendant 2 s, puis la carte se retourne. */
   function reveal() {
     phase = 'revealing'; setHint('');
     var s = opts.settings();
     if (s.sound) opts.sound.suspense(SUSPENSE_MS / 1000);
-    card.classList.add('shake');
+    card.animate(shakeFrames(SUSPENSE_MS), { duration: SUSPENSE_MS, easing: 'linear' });
     for (var t = 0; t < SUSPENSE_MS; t += 70) (function (tt) { later(function () { opts.haptic(tt < SUSPENSE_MS / 2 ? 1 : 2); }, tt); })(t);
     later(function () {
-      card.classList.remove('shake');
       if (s.sound) opts.sound.reveal();
       opts.haptic(3);
       card.querySelector('.sflip').classList.remove('down');
-      card.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], { duration: FLIP_MS, easing: 'ease-out' });
+      card.animate([{ transform: 'scale(1.05)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: FLIP_MS, easing: SMOOTH });
     }, SUSPENSE_MS);
-    later(function () {
-      phase = 'shown';
-      setHint(idx < items.length - 1 ? 'Touche la carte pour passer à la suivante' : 'Touche la carte pour la ranger');
-    }, SUSPENSE_MS + FLIP_MS);
+    later(function () { phase = 'shown'; setHint(shownHint()); }, SUSPENSE_MS + FLIP_MS);
   }
 
-  /* Rangement : la carte file vers sa place dans la rangée du bas. */
+  /* Rangement : la carte glisse en douceur jusqu'à sa place dans la rangée du bas. */
   function store() {
     phase = 'storing'; setHint('');
     var it = items[idx], t = trayCard(it);
     t.style.visibility = 'hidden';
     tray.appendChild(t);
-    tray.scrollLeft = tray.scrollWidth;
+    tray.scrollTo({ left: tray.scrollWidth, behavior: 'auto' });
     var a = card.getBoundingClientRect(), b = t.getBoundingClientRect();
-    var dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
-    var anim = card.animate([{ transform: 'none' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + (b.width / a.width) + ')' }],
-      { duration: STORE_MS, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' });
+    var dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2), k = b.width / a.width;
+    var anim = card.animate([
+      { transform: 'none' },
+      { transform: 'translate(' + (dx * 0.35) + 'px,' + (dy * 0.25) + 'px) scale(' + (1 - (1 - k) * 0.35) + ') rotate(-4deg)', offset: 0.35 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + k + ')' }
+    ], { duration: STORE_MS, easing: 'cubic-bezier(.45,.05,.25,1)', fill: 'forwards' });
+    if (opts.settings().sound) opts.sound.slide();
     opts.haptic(1);
     anim.onfinish = function () {
       t.style.visibility = '';
+      t.animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' });
       center.innerHTML = ''; card = null;
       next();
     };
@@ -116,40 +138,46 @@ function Scene(opts) {
     count.textContent = 'Tous les groupes sont sortis';
     setHint('');
     skipBtn.hidden = true;
-    doneBtn.hidden = false;
     gather();
   }
-  /* Fin : toutes les cartes de la rangée remontent au centre, au-dessus de « Terminé ». */
+  /* Fin : les cartes de la rangée glissent au centre ; « Terminé » se place juste en dessous. */
   function gather() {
     var cards = Array.prototype.slice.call(tray.children);
     var before = cards.map(function (c) { return c.getBoundingClientRect(); });
-    var wrap = document.createElement('div'), box = document.createElement('div');
+    var wrap = document.createElement('div'), inner = document.createElement('div'), box = document.createElement('div');
     wrap.className = 'final';
+    inner.className = 'finalinner';
     box.className = 'finalgrid' + (cards.length > 4 ? ' many' : '');
-    wrap.appendChild(box);
+    inner.appendChild(box);
+    inner.appendChild(doneBtn);
+    wrap.appendChild(inner);
     center.innerHTML = '';
     center.appendChild(wrap);
     cards.forEach(function (c) { box.appendChild(c); });
     tray.hidden = true;
+    doneBtn.hidden = false;
     cards.forEach(function (c, i) {
       var a = before[i], b = c.getBoundingClientRect();
       if (!a.width || !b.width) return;
       c.animate([
         { transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')', transformOrigin: '0 0' },
         { transform: 'none', transformOrigin: '0 0' }
-      ], { duration: 550, delay: i * 40, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'backwards' });
+      ], { duration: GATHER_MS, delay: i * 55, easing: SMOOTH, fill: 'backwards' });
     });
+    doneBtn.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 400, delay: GATHER_MS * 0.6 + cards.length * 55, easing: SMOOTH, fill: 'backwards' });
   }
   /* « Tout révéler » : range directement tout ce qui reste. */
   function skip() {
     clearTimers();
     if (card) card.getAnimations().forEach(function (a) { a.cancel(); });
+    card = null;
     for (var i = idx; i < items.length; i++) tray.appendChild(trayCard(items[i]));
-    tray.scrollLeft = tray.scrollWidth;
     finish();
   }
 
-  center.addEventListener('click', function () {
+  center.addEventListener('click', function (e) {
+    if (e.target.closest('.stage-done')) return;
     if (phase === 'hidden') reveal();
     else if (phase === 'shown') store();
   });
@@ -178,17 +206,18 @@ function Scene(opts) {
     start: function (draw) {
       clearTimers();
       nbGroups = draw.groups.length;
-      items = draw.groups.map(function (g, i) { return { names: g, label: 'Groupe ' + (i + 1), color: opts.color(i) }; });
-      if (draw.bench.length) items.push({ names: draw.bench, label: 'Sur le banc', color: 'var(--muted)', bench: true });
+      items = draw.groups.map(function (g, i) { return { names: g, label: 'Groupe ' + (i + 1), color: opts.color(i), flowers: opts.flowers(i) }; });
+      if (draw.bench.length) items.push({ names: draw.bench, label: 'Sur le banc', color: 'var(--muted)', flowers: 'none', bench: true });
       idx = 0;
+      clearCenter();
       tray.innerHTML = ''; tray.scrollLeft = 0; tray.hidden = false;
-      doneBtn.hidden = true; skipBtn.hidden = false;
+      skipBtn.hidden = false;
       arrive();
     },
     stop: function () {
       clearTimers();
       phase = 'idle';
-      center.innerHTML = ''; card = null;
+      clearCenter(); card = null;
     }
   };
 }

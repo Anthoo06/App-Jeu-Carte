@@ -77,6 +77,34 @@ var Son = (function () {
     });
   }
 
+  /* Arrivée : souffle filtré qui monte pendant la rotation, puis petit « pop » quand la carte se pose. */
+  function arriveAt(c, out, buf, t0, dur) {
+    var src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; src.loop = true;
+    bp.type = 'bandpass'; bp.Q.value = 1.4;
+    bp.frequency.setValueAtTime(300, t0); bp.frequency.exponentialRampToValueAtTime(2400, t0 + dur * 0.9);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.22, t0 + dur * 0.85);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + 0.06);
+    src.connect(bp); bp.connect(g); g.connect(out); src.start(t0); src.stop(t0 + dur + 0.1);
+    var t = t0 + dur;
+    var o = c.createOscillator(), og = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(880, t + 0.06);
+    og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.28, t + 0.008); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.18);
+    var th = c.createOscillator(), tg = c.createGain();
+    th.type = 'sine'; th.frequency.setValueAtTime(110, t); th.frequency.exponentialRampToValueAtTime(55, t + 0.18);
+    tg.gain.setValueAtTime(0.4, t); tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+    th.connect(tg); tg.connect(out); th.start(t); th.stop(t + 0.22);
+  }
+  /* Glissement : bref frottement de carte. */
+  function slideAt(c, out, buf, t) {
+    var src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.Q.value = 0.9;
+    bp.frequency.setValueAtTime(1800, t); bp.frequency.exponentialRampToValueAtTime(700, t + 0.3);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+    src.connect(bp); bp.connect(g); g.connect(out); src.start(t, Math.random()); src.stop(t + 0.35);
+  }
+
   function live() {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
@@ -89,11 +117,13 @@ var Son = (function () {
     /* À appeler pendant un appui de l'utilisateur, pour que le navigateur autorise le son. */
     unlock: function () { try { live(); } catch (e) { /* pas de son */ } },
     suspense: function (dur) { try { var c = live(); if (c) suspenseAt(c, c._out, noise, c.currentTime + 0.02, dur); } catch (e) { /* pas de son */ } },
+    arrive: function (dur) { try { var c = live(); if (c) arriveAt(c, c._out, noise, c.currentTime + 0.01, dur); } catch (e) { /* pas de son */ } },
+    slide: function () { try { var c = live(); if (c) slideAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
     reveal: function () { try { var c = live(); if (c) revealAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
     /* Pour écouter hors de l'appli : rend suspense + révélation dans un contexte hors-ligne. */
     renderDemo: function (OfflineCtx) {
-      var c = new OfflineCtx(2, 44100 * 4, 44100), buf = noiseBuffer(c), out = bus(c);
-      suspenseAt(c, out, buf, 0.2, 2.0); revealAt(c, out, buf, 2.25);
+      var c = new OfflineCtx(2, 44100 * 6, 44100), buf = noiseBuffer(c), out = bus(c);
+      arriveAt(c, out, buf, 0.2, 1.5); suspenseAt(c, out, buf, 2.2, 2.0); revealAt(c, out, buf, 4.25);
       return c.startRendering();
     }
   };

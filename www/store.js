@@ -3,9 +3,9 @@
 var Store = (function (L) {
   'use strict';
   var MAXP = 60, MAXLEN = 24, HIST_LIMIT = 50;
-  var DEF = { pick: 2, other: 4, leftover: 'bigger', bench: false, avoid: true, suspense: false, showHistory: false, anim: true, sound: true, vibrate: true, theme: 'auto' };
+  var DEF = { pick: 2, other: 4, leftover: 'bigger', bench: false, avoid: true, suspense: false, showHistory: false, anim: true, sound: true, decor: true, vibrate: true, theme: 'auto' };
   var CHOICES = { pick: [2, 3, 0], leftover: ['bigger', 'smaller'], theme: ['auto', 'light', 'dark'] };
-  var BOOLS = ['bench', 'avoid', 'suspense', 'showHistory', 'anim', 'sound', 'vibrate'];
+  var BOOLS = ['bench', 'avoid', 'suspense', 'showHistory', 'anim', 'sound', 'decor', 'vibrate'];
 
   function clean(s, max) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max || MAXLEN); }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
