@@ -129,7 +129,7 @@ Le contraste du texte respecte au moins le niveau AA. On garde les polices embar
 ## Ajout : finitions de la scène (2026-10-26)
 
 - À la fin, les cartes et « Terminé » forment un seul bloc centré, avec le bouton juste sous les cartes.
-- Mouvements plus fluides : rotation d'arrivée plus lente (2 tours en 1,5 s), tremblement du suspense calculé image par image, rangement en glissé courbe, regroupement final décalé carte par carte.
+- Mouvements plus fluides : rotation d'arrivée (2 tours, la carte se pose à 0,95 s puis se stabilise jusqu'à 1,3 s ; « pop » et dernière vibration calés sur la pose, retard du haut-parleur compensé), tremblement du suspense calculé image par image, rangement en glissé courbe, regroupement final décalé carte par carte.
 - Arrivée sonore : souffle qui monte pendant la rotation, puis petit « pop » à l'atterrissage. Bref frottement quand la carte se range.
 - Réglage « Fleurs sur les cartes » (activé par défaut) : 3 motifs (marguerites, cerisier, tulipes) de la couleur du groupe en fond de carte.
 - Texte centré (« Groupe X » et prénoms) dans toutes les cartes.

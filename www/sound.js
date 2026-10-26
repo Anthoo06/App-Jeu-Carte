@@ -77,7 +77,7 @@ var Son = (function () {
     });
   }
 
-  /* Arrivée : souffle filtré qui monte pendant la rotation, puis petit « pop » quand la carte se pose. */
+  /* Arrivée : souffle filtré qui monte pendant la rotation, puis petit « pop » quand la carte se pose (dur = moment où elle se pose). */
   function arriveAt(c, out, buf, t0, dur) {
     var src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
     src.buffer = buf; src.loop = true;
@@ -105,6 +105,8 @@ var Son = (function () {
     src.connect(bp); bp.connect(g); g.connect(out); src.start(t, Math.random()); src.stop(t + 0.35);
   }
 
+  function latency(c) { return Math.min(0.15, (c.outputLatency || 0) + (c.baseLatency || 0)); }
+
   function live() {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
@@ -117,13 +119,14 @@ var Son = (function () {
     /* À appeler pendant un appui de l'utilisateur, pour que le navigateur autorise le son. */
     unlock: function () { try { live(); } catch (e) { /* pas de son */ } },
     suspense: function (dur) { try { var c = live(); if (c) suspenseAt(c, c._out, noise, c.currentTime + 0.02, dur); } catch (e) { /* pas de son */ } },
-    arrive: function (dur) { try { var c = live(); if (c) arriveAt(c, c._out, noise, c.currentTime + 0.01, dur); } catch (e) { /* pas de son */ } },
+    // Le haut-parleur a un léger retard (surtout sur Android) : on avance le son d'autant pour qu'il tombe avec l'image.
+    arrive: function (land) { try { var c = live(); if (c) arriveAt(c, c._out, noise, c.currentTime, Math.max(0.05, land - latency(c))); } catch (e) { /* pas de son */ } },
     slide: function () { try { var c = live(); if (c) slideAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
     reveal: function () { try { var c = live(); if (c) revealAt(c, c._out, noise, c.currentTime + 0.01); } catch (e) { /* pas de son */ } },
     /* Pour écouter hors de l'appli : rend suspense + révélation dans un contexte hors-ligne. */
     renderDemo: function (OfflineCtx) {
       var c = new OfflineCtx(2, 44100 * 6, 44100), buf = noiseBuffer(c), out = bus(c);
-      arriveAt(c, out, buf, 0.2, 1.5); suspenseAt(c, out, buf, 2.2, 2.0); revealAt(c, out, buf, 4.25);
+      arriveAt(c, out, buf, 0.2, 0.95); suspenseAt(c, out, buf, 2.2, 2.0); revealAt(c, out, buf, 4.25);
       return c.startRendering();
     }
   };

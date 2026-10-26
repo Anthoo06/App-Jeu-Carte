@@ -18,7 +18,7 @@ function Scene(opts) {
   var endBox = el.querySelector('.stage-end'), doneBtn = el.querySelector('.stage-done'), skipBtn = el.querySelector('.stage-skip');
   var items = [], idx = 0, phase = 'idle', timers = [], card = null, nbGroups = 0;
 
-  var ARRIVE_MS = 1500, SUSPENSE_MS = 2000, FLIP_MS = 700, STORE_MS = 650, GATHER_MS = 750;
+  var LAND_MS = 950, ARRIVE_MS = 1300, SUSPENSE_MS = 2000, FLIP_MS = 700, STORE_MS = 650, GATHER_MS = 750;
   var SMOOTH = 'cubic-bezier(.22,.8,.24,1)';
 
   function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
@@ -66,20 +66,21 @@ function Scene(opts) {
     center.appendChild(card);
     phase = 'arriving';
     setCount(); setHint('');
+    // La carte se pose à LAND_MS (pleine taille, presque droite) puis se stabilise ; le « pop » et la
+    // dernière vibration tombent pile à ce moment-là.
     card.animate([
-      { transform: 'scale(.05) rotate(-720deg)' },
-      { transform: 'scale(.55) rotate(-200deg)', offset: 0.45 },
-      { transform: 'scale(1.05) rotate(6deg)', offset: 0.86 },
+      { transform: 'scale(.05) rotate(-720deg)', easing: 'cubic-bezier(.4,.15,.5,1)' },
+      { transform: 'scale(1.06) rotate(5deg)', offset: LAND_MS / ARRIVE_MS, easing: 'cubic-bezier(.3,.7,.4,1)' },
       { transform: 'scale(1) rotate(0deg)' }
-    ], { duration: ARRIVE_MS, easing: 'cubic-bezier(.3,.55,.35,1)' });
-    if (s.sound) opts.sound.arrive(ARRIVE_MS / 1000);
-    var t = 0, gap = 280;
-    while (t < ARRIVE_MS - 80) {
-      (function (tt) { later(function () { opts.haptic(tt < ARRIVE_MS * 0.45 ? 1 : tt < ARRIVE_MS * 0.8 ? 2 : 3); }, tt); })(t);
-      t += gap; gap = Math.max(45, gap * 0.8);
+    ], { duration: ARRIVE_MS, easing: 'linear' });
+    if (s.sound) opts.sound.arrive(LAND_MS / 1000);
+    var t = 0, gap = 240;
+    while (t < LAND_MS - 60) {
+      (function (tt) { later(function () { opts.haptic(tt < LAND_MS * 0.45 ? 1 : tt < LAND_MS * 0.8 ? 2 : 3); }, tt); })(t);
+      t += gap; gap = Math.max(40, gap * 0.78);
     }
+    later(function () { opts.haptic(3); }, LAND_MS);
     later(function () {
-      opts.haptic(3);
       phase = down ? 'hidden' : 'shown';
       setHint(down ? 'Touche la carte pour la retourner' : shownHint());
     }, ARRIVE_MS);
