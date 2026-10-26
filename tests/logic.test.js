@@ -35,6 +35,14 @@ test('drawGroups : contraintes respectées', () => {
   }
 });
 
+test('drawGroups : paires répétées signalées seulement si « éviter » est coché', () => {
+  const hist = new Map([[L.pk('A', 'B'), 1]]);
+  const off = L.drawGroups(['A', 'B'], opts({ hist, avoid: false }));
+  assert.strictEqual(off.repeats, 0);
+  const on = L.drawGroups(['A', 'B'], opts({ hist, avoid: true }));
+  assert.strictEqual(on.repeats, 1);
+});
+
 test('drawGroups : moins de 2 joueurs → erreur', () => {
   assert.ok(L.drawGroups(['A'], opts()).error);
 });

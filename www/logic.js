@@ -154,8 +154,9 @@ function drawGroups(present, o, rnd) {
   }
   if (!best) return { error: 'Impossible de former ces groupes avec les contraintes « à réunir ».' };
   const groups = best.map(g => shuffled([].concat.apply([], g), rnd));
+  // Les paires répétées ne sont signalées que si l'on a demandé à les éviter.
   let repeats = 0;
-  for (const g of groups) for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
+  if (o.avoid) for (const g of groups) for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++) {
     if ((o.hist.get(pk(g[i], g[j])) || 0) > 0) repeats++;
   }
   return { groups: shuffled(groups, rnd), bench, violations: bestCost.viol, repeats };
